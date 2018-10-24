@@ -5,13 +5,12 @@ import com.github.h0tk3y.betterParse.parser.tryParseToEnd
 import java.io.File
 
 fun main(args: Array<String>) {
-    var file = File("/Users/tommy/programming/parser/src/main/resources/hudlayout.res")
+    var file = File("/Users/tommy/programming/parser/src/main/resources/easy.res")
     //file.forEachLine { println(it) }
     //println(ast.toString())
     val cleanfile = file.readLines()
     val a = ItemsParser.tryParseToEnd(cleanfile.joinToString("\n"))
     println(ast)
-    println(ast2)
     val b = a.toParsedOrThrow()
 
     b.value.forEach { it.print("") }
