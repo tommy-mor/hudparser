@@ -12,9 +12,9 @@ interface Item {
 data class Chunk(val title: String, val children: List<Item>, val comment: Comment?, val bracketcomment: Comment?) : Item {
     override fun print(indent: String) {
         println("$indent$title${comment?.value ?: ""}")
-        println("$indent{${bracketcomment?.value ?: ""}")
+        println("$indent{\n${bracketcomment?.value ?: ""}")
         children.forEach { it.print(indent + "  ") }
-        println("$indent}")
+        println("$indent}\n")
     }
 }
 data class Entry(val title: String, val value: String, val comment: Comment?) : Item {
@@ -31,14 +31,12 @@ data class Comment(val value: String) : Item {
 
 
 // todo
-// deal with [XBOX] stuff
-// fix current crash
-// make it less lossy
-// reproducing functions
+// deal properly with [$XBOX] tags
 
 
 object ItemsParser : Grammar<List<Item>>() {
     val ws by token("\\s+", ignore = true)
+    val weirdness by token ("\\[.+\\]", ignore=true)
 
     val comment by token("\\/\\/.*")
     val num by token("\\d+")

@@ -5,7 +5,7 @@ import com.github.h0tk3y.betterParse.parser.tryParseToEnd
 import java.io.File
 
 fun main(args: Array<String>) {
-    var file = File("/Users/tommy/programming/parser/src/main/resources/easy.res")
+    var file = File("/Users/tommy/programming/parser/src/main/resources/hudlayout.res")
     //file.forEachLine { println(it) }
     //println(ast.toString())
     val cleanfile = file.readLines()
