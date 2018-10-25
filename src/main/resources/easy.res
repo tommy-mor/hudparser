@@ -58,6 +58,9 @@
     	"tall"				"500"
     	"MeterFG"			"White"
     	"MeterBG"			"Gray"
+    	if_mvm{
+    	 "srtst" "strstr"
+    	}
 
     		HudControlPointIcons
         	{

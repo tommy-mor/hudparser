@@ -38,11 +38,12 @@ data class Comment(val value: String) : Item {
 // if_mvm{} with no space errors the parser
 
 object ItemsParser : Grammar<List<Item>>() {
-    
+    val ws by token("\\s+", ignore = true)
+
+
     val LCURL by token("\\{")
     val RCURL by token("}")
 
-    val ws by token("\\s+", ignore = true)
     val weirdness by token ("\\[.+\\]", ignore=true)
 
     val comment by token("\\/\\/.*")
@@ -51,7 +52,7 @@ object ItemsParser : Grammar<List<Item>>() {
 
 
 
-    val word by token("""("[^"]+")|[^\s]+""")
+    val word by token("""("[^"{}]+")|[^\s{}]+""")
 
     val commentparser = comment map { Comment(it.text) }
     val entryParser = word and word and optional(commentparser) map { (a,b ,c) -> Entry(a.text, b.text, c)}
