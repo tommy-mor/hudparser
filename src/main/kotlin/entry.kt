@@ -13,9 +13,13 @@ import java.io.File
 fun main(args: Array<String>) {
 
     File("/Users/tommy/Downloads/rayshud-master").walkTopDown().filter { it.name.endsWith(".res") }.forEach {
-        val cleanfile = it.readLines()
-        val a = ItemsParser.tryParseToEnd(cleanfile.joinToString("\n"))
-        println(it.name)
-        val b = a.toParsedOrThrow()
+        try {
+            val cleanfile = it.readLines()
+            val a = ItemsParser.tryParseToEnd(cleanfile.joinToString("\n"))
+            println(it.name)
+            val b = a.toParsedOrThrow()
+        } catch(e: Exception) {
+            println(e.toString())
+        }
      }
 }

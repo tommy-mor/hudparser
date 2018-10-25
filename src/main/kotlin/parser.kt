@@ -34,8 +34,14 @@ data class Comment(val value: String) : Item {
 // deal properly with [$XBOX] tags
 // test if tf2 is newline sensitive, then make parser simpler maybe?
 
+// bugs
+// if_mvm{} with no space errors the parser
 
 object ItemsParser : Grammar<List<Item>>() {
+    
+    val LCURL by token("\\{")
+    val RCURL by token("}")
+
     val ws by token("\\s+", ignore = true)
     val weirdness by token ("\\[.+\\]", ignore=true)
 
@@ -43,8 +49,7 @@ object ItemsParser : Grammar<List<Item>>() {
     val num by token("\\d+")
 
 
-    val LCURL by token("\\{")
-    val RCURL by token("}")
+
 
     val word by token("""("[^"]+")|[^\s]+""")
 
