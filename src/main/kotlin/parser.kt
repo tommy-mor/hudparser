@@ -32,6 +32,7 @@ data class Comment(val value: String) : Item {
 
 // todo
 // deal properly with [$XBOX] tags
+// test if tf2 is newline sensitive, then make parser simpler maybe?
 
 
 object ItemsParser : Grammar<List<Item>>() {
