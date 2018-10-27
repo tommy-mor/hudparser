@@ -10,14 +10,7 @@ import java.io.File
 // establish change model
 // ui
 fun main(args: Array<String>) {
-    val small = false
-    if (small) {
-        parseFile(File("/Users/tommy/programming/parser/src/main/resources/easy.res"))
-    } else {
-        File("/Users/tommy/Downloads/rayshud-master").walkTopDown().filter { it.name.endsWith(".res") }.forEach {
-            parseFile(it)
-        }
-    }
+    var mainhud = Hud("/Users/tommy/Downloads/rayshud-master")
 }
 
 fun parseFile(file: File) {
