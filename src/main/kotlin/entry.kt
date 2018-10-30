@@ -17,7 +17,6 @@ fun parseFile(file: File): List<Item> {
     try {
         val cleanfile = file.readLines()
         val a = ItemsParser.tryParseToEnd(cleanfile.joinToString("\n"))
-        println(file.name)
         val b = a.toParsedOrThrow()
         return b.value
     } catch(e: Exception) {

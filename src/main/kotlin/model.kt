@@ -3,13 +3,18 @@ import java.io.File
 class Hud(filename: String) {
     val rootfile = File(filename)
     val root = folder(rootfile, mutableListOf())
+
+
+
+
     init {
         if (!rootfile.isDirectory) throw IllegalArgumentException("Hud needs to be given a directory")
         walk(root)
 
-        println(root)
+        val hudlayout = find(query = "hudlayout.res") ?: throw HudFileNotFoundException("hudlayout.res")
+        val clientscheme = find(query = "clientscheme.res") ?: throw HudFileNotFoundException("clientscheme.res")
+        println(hudlayout.file.absolutePath)
     }
-
     private fun walk(file: folder) : hudfile {
         file.file.walkTopDown().maxDepth(1).drop(1).forEach {
             if(it.isDirectory) {
@@ -17,7 +22,7 @@ class Hud(filename: String) {
                 walk(folder)
                 file.children.add(folder)
             } else {
-                if(it.endsWith(".res")) {
+                if(it.absolutePath.endsWith(".res")) {
                     file.children.add(resfile(it))
                 } else {
                     file.children.add(otherfile(it))
@@ -27,29 +32,27 @@ class Hud(filename: String) {
         return file
     }
 
-    private fun find(domain: folder = root, query: String): hudfile {
+    private fun find(domain: folder = root, query: String): hudfile? {
         domain.children.forEach {
-            if(it is folder) { return find(it, query) }
+            if(it is folder) { find(it, query)?.let { return it }  }
             else {
-                if(it.file.name == query) {
+                if(it.file.name.equals(query, ignoreCase = true)) {
                     return it
                 }
             }
         }
-        throw HudFileNotFoundException("file $query not found")
+        return null
     }
 
 
 
-    val clientscheme = find(query = "clienscheme.res") as resfile
-    val hudlayout = find(query = "hudlayout.res") as resfile
 
     fun getFont(query: String): Chunk {
-
+        throw NotImplementedError()
     }
 
     fun getLayout(query: String): Chunk {
-
+        throw NotImplementedError()
     }
     //list of files, list of res files
     //map of filename to chunk objects
