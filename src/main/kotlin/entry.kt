@@ -23,4 +23,5 @@ fun parseFile(file: File): List<Item> {
     } catch(e: Exception) {
         println(e.toString())
     }
+    return emptyList()
 }

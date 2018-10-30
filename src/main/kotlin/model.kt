@@ -10,7 +10,7 @@ class Hud(filename: String) {
         println(root)
     }
 
-    fun walk(file: folder) : hudfile {
+    private fun walk(file: folder) : hudfile {
         file.file.walkTopDown().maxDepth(1).drop(1).forEach {
             if(it.isDirectory) {
                 var folder = folder(it, mutableListOf())
@@ -26,16 +26,46 @@ class Hud(filename: String) {
         }
         return file
     }
+
+    private fun find(domain: folder = root, query: String): hudfile {
+        domain.children.forEach {
+            if(it is folder) { return find(it, query) }
+            else {
+                if(it.file.name == query) {
+                    return it
+                }
+            }
+        }
+        throw HudFileNotFoundException("file $query not found")
+    }
+
+
+
+    val clientscheme = find(query = "clienscheme.res") as resfile
+    val hudlayout = find(query = "hudlayout.res") as resfile
+
+    fun getFont(query: String): Chunk {
+
+    }
+
+    fun getLayout(query: String): Chunk {
+
+    }
     //list of files, list of res files
     //map of filename to chunk objects
     //methods to manipulate those things
 }
 
 
-abstract class hudfile
+interface hudfile {
+    val file: File
+}
 
-class resfile(val file : File) : hudfile() {
+class resfile(override val file : File) : hudfile {
     var items = parseFile(file)
 }
-class otherfile(val file : File) : hudfile()
-class folder(val file : File, var children: MutableList<hudfile>) : hudfile()
+class otherfile(override val file : File) : hudfile
+class folder(override val file : File, var children: MutableList<hudfile>) : hudfile
+
+
+class HudFileNotFoundException(message:String): Exception(message)
