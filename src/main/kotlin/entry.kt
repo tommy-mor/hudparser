@@ -12,18 +12,16 @@ import java.io.File
 fun main(args: Array<String>) {
     var mainhud = Hud("/Users/tommy/Downloads/rayshud-master")
     //finds a chunk in hudlayout
-    findChunk((mainhud.hudlayout as resfile).items[0] as Chunk, "BasicCross").let { println(it) }
+    (mainhud.clientscheme as resfile).items.forEach { it.clean() }
 }
 
 fun parseFile(file: File): List<Item> {
     try {
-        val cleanfile = file.readLines()
-        val a = ItemsParser.tryParseToEnd(cleanfile.joinToString("\n"))
+        val a = ItemsParser.tryParseToEnd(file.readText())
         val b = a.toParsedOrThrow()
         return b.value
     } catch(e: Exception) {
         println(e.toString())
     }
-
     return emptyList()
 }

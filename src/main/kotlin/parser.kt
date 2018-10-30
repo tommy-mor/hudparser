@@ -8,6 +8,7 @@ import com.github.h0tk3y.betterParse.parser.Parser
 
 interface Item {
     fun print(indent: String)
+    fun clean(): Unit
 }
 
 //todo follow #base functions
@@ -19,16 +20,28 @@ data class Chunk(val title: String, val children: List<Item>, val comment: Comme
         children.forEach { it.print(indent + "  ") }
         println("$indent}\n")
     }
+
+    override fun clean() {
+        children.forEach { it.clean() }
+    }
 }
 data class Entry(val title: String, val value: String, val comment: Comment?) : Item {
     override fun print(indent: String) {
         println ("$indent$title    $value ${comment?.value ?: ""}")
+    }
+
+    override fun clean() {
+        if(title.equals("#base", ignoreCase = true)) println("#base at $title $value")
     }
 }
 
 data class Comment(val value: String) : Item {
     override fun print(indent: String) {
         println ("$indent$value")
+    }
+
+    override fun clean() {
+        //do nothing
     }
 }
 
