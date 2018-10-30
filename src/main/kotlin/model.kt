@@ -1,11 +1,9 @@
 import java.io.File
+//todo find a way around the #base stuff in rayshud and see how important it is to add that
 
 class Hud(filename: String) {
     val rootfile = File(filename)
     val root = folder(rootfile, mutableListOf())
-
-
-
 
     init {
         if (!rootfile.isDirectory) throw IllegalArgumentException("Hud needs to be given a directory")
@@ -13,7 +11,6 @@ class Hud(filename: String) {
 
         val hudlayout = find(query = "hudlayout.res") ?: throw HudFileNotFoundException("hudlayout.res")
         val clientscheme = find(query = "clientscheme.res") ?: throw HudFileNotFoundException("clientscheme.res")
-        println(hudlayout.file.absolutePath)
     }
     private fun walk(file: folder) : hudfile {
         file.file.walkTopDown().maxDepth(1).drop(1).forEach {
@@ -44,9 +41,6 @@ class Hud(filename: String) {
         return null
     }
 
-
-
-
     fun getFont(query: String): Chunk {
         throw NotImplementedError()
     }
@@ -59,6 +53,16 @@ class Hud(filename: String) {
     //methods to manipulate those things
 }
 
+fun findChunk(target: Chunk, query: String) : Chunk? {
+    if(target.title.equals(query, ignoreCase = true)) {
+        return target
+    } else {
+        target.children.forEach {
+            if(it is Chunk) { findChunk(it, query)?.let { return it} }
+        }
+    }
+    return null
+}
 
 interface hudfile {
     val file: File
