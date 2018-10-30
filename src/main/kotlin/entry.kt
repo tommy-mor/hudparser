@@ -11,6 +11,8 @@ import java.io.File
 // ui
 fun main(args: Array<String>) {
     var mainhud = Hud("/Users/tommy/Downloads/rayshud-master")
+    //finds a chunk in hudlayout
+    findChunk((mainhud.hudlayout as resfile).items[0] as Chunk, "BasicCross").let { println(it) }
 }
 
 fun parseFile(file: File): List<Item> {
@@ -22,5 +24,6 @@ fun parseFile(file: File): List<Item> {
     } catch(e: Exception) {
         println(e.toString())
     }
+
     return emptyList()
 }

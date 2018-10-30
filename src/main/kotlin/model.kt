@@ -1,5 +1,6 @@
 import java.io.File
 //todo find a way around the #base stuff in rayshud and see how important it is to add that
+//todo maybe trickery like this will be hard to fix https://www.youtube.com/watch?v=B3Qf2CGsrUs
 
 class Hud(filename: String) {
     val rootfile = File(filename)
@@ -8,10 +9,10 @@ class Hud(filename: String) {
     init {
         if (!rootfile.isDirectory) throw IllegalArgumentException("Hud needs to be given a directory")
         walk(root)
-
-        val hudlayout = find(query = "hudlayout.res") ?: throw HudFileNotFoundException("hudlayout.res")
-        val clientscheme = find(query = "clientscheme.res") ?: throw HudFileNotFoundException("clientscheme.res")
     }
+    val hudlayout = find(query = "hudlayout.res") ?: throw HudFileNotFoundException("hudlayout.res")
+    val clientscheme = find(query = "clientscheme.res") ?: throw HudFileNotFoundException("clientscheme.res")
+
     private fun walk(file: folder) : hudfile {
         file.file.walkTopDown().maxDepth(1).drop(1).forEach {
             if(it.isDirectory) {
@@ -54,7 +55,7 @@ class Hud(filename: String) {
 }
 
 fun findChunk(target: Chunk, query: String) : Chunk? {
-    if(target.title.equals(query, ignoreCase = true)) {
+    if(target.title.trim('\"').equals(query, ignoreCase = true)) {
         return target
     } else {
         target.children.forEach {

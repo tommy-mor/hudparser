@@ -9,6 +9,9 @@ import com.github.h0tk3y.betterParse.parser.Parser
 interface Item {
     fun print(indent: String)
 }
+
+//todo follow #base functions
+//todo merge function
 data class Chunk(val title: String, val children: List<Item>, val comment: Comment?, val bracketcomment: Comment?) : Item {
     override fun print(indent: String) {
         println("$indent$title${comment?.value ?: ""}")
@@ -34,8 +37,6 @@ data class Comment(val value: String) : Item {
 // deal properly with [$XBOX] tags
 // test if tf2 is newline sensitive, then make parser simpler maybe?
 
-// bugs
-// if_mvm{} with no space errors the parser
 
 object ItemsParser : Grammar<List<Item>>() {
     val ws by token("\\s+", ignore = true)
