@@ -5,11 +5,12 @@ import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.Parser
 import com.sun.xml.internal.xsom.impl.UnionSimpleTypeImpl
+import java.io.PrintWriter
 
 
 interface Item {
     var title: String
-    fun print(indent: String)
+    fun print(out: PrintWriter, indent: String)
     // take function that handles when one is found
     fun clean(baseFollower : (String) -> Unit)
     fun merge(new: Item)
@@ -19,11 +20,11 @@ interface Item {
 //todo follow #base functions
 //todo merge function
 data class Chunk(override var title: String, var children: List<Item>, var comment: Comment?, var bracketcomment: Comment?) : Item {
-    override fun print(indent: String) {
-        println("$indent$title${comment?.value ?: ""}")
-        println("$indent{\n${bracketcomment?.value ?: ""}")
-        children.forEach { it.print(indent + "  ") }
-        println("$indent}\n")
+    override fun print(out: PrintWriter, indent: String) {
+        out.println("$indent$title${comment?.value ?: ""}")
+        out.println("$indent{\n${bracketcomment?.value ?: ""}")
+        children.forEach { it.print(out,indent + "  ") }
+        out.println("$indent}\n")
     }
 
     override fun clean(baseFollower: (String) -> Unit) {
@@ -50,8 +51,8 @@ data class Chunk(override var title: String, var children: List<Item>, var comme
 }
 
 data class Entry(override var title: String, var value: String, var comment: Comment?) : Item {
-    override fun print(indent: String) {
-        println ("$indent$title    $value ${comment?.value ?: ""}")
+    override fun print(out: PrintWriter, indent: String) {
+        out.println ("$indent$title    $value ${comment?.value ?: ""}")
     }
 
     override fun clean(baseFollower: (String) -> Unit) {
@@ -72,8 +73,8 @@ data class Entry(override var title: String, var value: String, var comment: Com
 
 data class Comment(var value: String) : Item {
     override var title = ""
-    override fun print(indent: String) {
-        println ("$indent$value")
+    override fun print(out: PrintWriter, indent: String) {
+        out.println ("$indent$value")
     }
 
     override fun clean(baseFollower: (String) -> Unit) {

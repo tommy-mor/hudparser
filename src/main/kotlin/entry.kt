@@ -11,6 +11,7 @@ import java.io.File
 // ui
 fun main(args: Array<String>) {
     var mainhud = Hud("/Users/tommy/Downloads/rayshud-master")
+    mainhud.export("/Users/tommy/Downloads/outputhud/")
 
     //finds a chunk in hudlayout
 

@@ -14,9 +14,14 @@ class Hud(filename: String) {
     }
     val hudlayout = find(query = "hudlayout.res") ?: throw HudFileNotFoundException("hudlayout.res")
     val clientscheme = find(query = "clientscheme.res") ?: throw HudFileNotFoundException("clientscheme.res")
-    fun export() {
+
+    fun export(pathname: String) {
         //todo change to proper filename
-        
+        var dir = File(pathname)
+        dir.deleteRecursively()
+        dir.mkdirs()
+        root.export(dir)
+        println("exported new hud to ${pathname}")
     }
     private fun walk(file: folder) : hudfile {
         file.file.walkTopDown().maxDepth(1).drop(1).forEach {
@@ -104,6 +109,7 @@ fun mergeFile(base: resfile, new: resfile) {
 interface hudfile {
     val file: File
     fun clean(relFinder: (String, String) -> hudfile?): Unit
+    fun export(folder: File): Unit
 }
 
 class resfile(override val file : File) : hudfile {
@@ -130,15 +136,33 @@ class resfile(override val file : File) : hudfile {
         items = items.dropWhile { it is Entry } // remove #base's at the end after following them
 
     }
+
+    override fun export(folder: File) {
+        var newfile = File(folder.absolutePath + "/" + file.name)
+        newfile.printWriter().use {
+            out -> items.forEach { it.print(out, "") }
+        }
+    }
 }
 
 class otherfile(override val file : File) : hudfile {
     override fun clean(relFinder: (String, String) -> hudfile?) {
         //do nothing
     }
+
+    override fun export(folder: File) {
+        var newfile = File(folder.absolutePath + "/" + file.name)
+        file.copyTo(newfile)
+    }
 }
 
 class folder(override val file : File, var children: MutableList<hudfile>) : hudfile {
+    override fun export(folder: File) {
+        var newfile = File(folder.absolutePath + "/" + file.name + "/")
+        newfile.mkdir()
+        children.forEach { it.export(newfile) }
+    }
+
     override fun clean(relFinder: (String, String) -> hudfile?) {
         children.forEach { it.clean(relFinder) }
     }
