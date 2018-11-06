@@ -11,8 +11,9 @@ import java.io.File
 // ui
 fun main(args: Array<String>) {
     var mainhud = Hud("/Users/tommy/Downloads/rayshud-master")
+
     //finds a chunk in hudlayout
-    (mainhud.clientscheme as resfile).items.forEach { it.clean() }
+
 }
 
 fun parseFile(file: File): List<Item> {
