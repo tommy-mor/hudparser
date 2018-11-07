@@ -1,8 +1,7 @@
 import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
-import com.github.h0tk3y.betterParse.parser.parseToEnd
 import com.github.h0tk3y.betterParse.parser.toParsedOrThrow
-import com.github.h0tk3y.betterParse.parser.tryParseToEnd
 import java.io.File
+
 
 
 // todo
@@ -12,7 +11,6 @@ import java.io.File
 fun main(args: Array<String>) {
     var mainhud = Hud("/Users/tommy/Downloads/rayshud-master")
     mainhud.export("/Users/tommy/Downloads/outputhud/")
-
     //finds a chunk in hudlayout
 
 }
