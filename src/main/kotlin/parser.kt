@@ -21,8 +21,8 @@ interface Item {
 //todo merge function
 data class Chunk(override var title: String, var children: List<Item>, var comment: Comment?, var bracketcomment: Comment?) : Item {
     override fun print(out: PrintWriter, indent: String) {
-        out.println("$indent$title${comment?.value ?: ""}")
-        out.println("$indent{\n${bracketcomment?.value ?: ""}")
+        out.println("$indent$title ${comment?.value ?: ""}")
+        out.println("$indent{\n$indent${bracketcomment?.value ?: ""}")
         children.forEach { it.print(out,indent + "  ") }
         out.println("$indent}\n")
     }
