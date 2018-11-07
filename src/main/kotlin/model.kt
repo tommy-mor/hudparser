@@ -6,14 +6,29 @@ import java.io.File
 class Hud(filename: String) {
     val rootfile = File(filename)
     val root = folder(rootfile, mutableListOf())
+    val hudname = rootfile.name
+    lateinit var hudlayout: hudfile
+    lateinit var clientscheme: hudfile
+
+    var parsed = false
+
 
     init {
-        if (!rootfile.isDirectory) throw IllegalArgumentException("Hud needs to be given a directory")
-        walk(root)
-        clean(root)
+        try {
+            if (!rootfile.isDirectory) throw IllegalArgumentException("Hud needs to be given a directory")
+            walk(root)
+            clean(root)
+            hudlayout = find(query = "hudlayout.res") ?: throw HudFileNotFoundException("hudlayout.res")
+            clientscheme = find(query = "clientscheme.res") ?: throw HudFileNotFoundException("clientscheme.res")
+
+            parsed = true
+        } catch (e: Exception) {
+            println(e)
+            //todo make this report to ui what problem its having
+            parsed = false
+        }
     }
-    val hudlayout = find(query = "hudlayout.res") ?: throw HudFileNotFoundException("hudlayout.res")
-    val clientscheme = find(query = "clientscheme.res") ?: throw HudFileNotFoundException("clientscheme.res")
+
 
     fun export(pathname: String) {
         //todo change to proper filename
@@ -138,9 +153,15 @@ class resfile(override val file : File) : hudfile {
     }
 
     override fun export(folder: File) {
-        var newfile = File(folder.absolutePath + "/" + file.name)
-        newfile.printWriter().use {
-            out -> items.forEach { it.print(out, "") }
+        val newfile = File(folder.absolutePath + "/" + file.name)
+
+        if(items.isEmpty()) {
+            //parse failed
+            file.copyTo(newfile)
+        } else {
+            newfile.printWriter().use {
+                out -> items.forEach { it.print(out, "") }
+            }
         }
     }
 }
