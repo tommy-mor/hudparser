@@ -93,6 +93,10 @@ data class Comment(var value: String) : Item {
 // test if tf2 is newline sensitive, then make parser simpler maybe?
 
 
+//TODO
+// investigate parse errors
+// see what is breaking chatscheme by whittling it down manually so that errors are more usefull
+
 object ItemsParser : Grammar<List<Item>>() {
     val ws by token("\\s+", ignore = true)
 
@@ -102,8 +106,9 @@ object ItemsParser : Grammar<List<Item>>() {
 
     val weirdness by token ("\\[.+\\]", ignore=true)
 
+    //val comment by token("\\/\\/.*|\\[\\\$.*\\].*")
     val comment by token("\\/\\/.*")
-    val num by token("\\d+")
+    
 
 
     val word by token("""("[^"{}]+")|[^\s{}]+""")
