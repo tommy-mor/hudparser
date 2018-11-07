@@ -95,6 +95,8 @@ class Hud(filename: String) {
     //list of files, list of res files
     //map of filename to chunk objects
     //methods to manipulate those things
+
+    override fun toString(): String = hudname
 }
 
 fun findChunk(target: Chunk, query: String) : Chunk? {

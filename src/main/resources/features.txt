@@ -1,0 +1,10 @@
+Health
+resource/ui/HudPlayerHealth.res
+
+Ammo
+resource/ui/HudAmmoWeapons.res
+hudlayout: HudWeaponAmmo
+
+Inspect Panel
+resource/ui/HudInspectPanel.res
+HudInspectPanel

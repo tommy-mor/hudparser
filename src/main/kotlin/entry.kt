@@ -10,9 +10,10 @@ import java.io.File
 // establish change model
 // ui
 fun main(args: Array<String>) {
-    var mainhud = Hud("/Users/tommy/Downloads/tf2basehud/")
-    mainhud.export("/Users/tommy/Downloads/outputhud/")
+    //var mainhud = Hud("/Users/tommy/Downloads/tf2basehud/")
+    //mainhud.export("/Users/tommy/Downloads/outputhud/")
     //finds a chunk in hudlayout
+    parseSpec("/Users/tommy/programming/parser/src/main/resources/features.txt")
 
 }
 

@@ -1,24 +1,10 @@
-import javafx.beans.Observable
-import javafx.collections.FXCollections
-import javafx.collections.ListChangeListener
 import javafx.collections.ObservableList
-import javafx.collections.transformation.FilteredList
-import javafx.collections.transformation.SortedList
-import javafx.collections.transformation.TransformationList
-import javafx.event.EventHandler
-import javafx.scene.control.SelectionMode
 import tornadofx.*
-import javafx.scene.paint.Color
-import java.time.LocalDate
-import java.time.Period
-import java.util.*
-import java.util.function.Consumer
-import java.util.function.Predicate
-import java.util.function.UnaryOperator
-import java.util.stream.Stream
 
 data class Transfer(val from: Hud, val to: Hud, val element: String) {
-
+    override fun toString(): String {
+        return "import ${element.toUpperCase()} from ${from.toString().toUpperCase()} into ${to.toString().toUpperCase()}"
+    }
 }
 
 class MyView: View() {
@@ -27,7 +13,13 @@ class MyView: View() {
     ).observable()
     var selectedHud: Hud? = null
     var selectedElement: String? = null
-    private lateinit var baseHud: Hud
+    var baseHud: Hud? = null
+    var transferList: ObservableList<Transfer> = mutableListOf<Transfer>().observable()
+    var selectedTransfer: Transfer? = null
+
+    var errorText by property<String>()
+    fun errorTextProperty() = getProperty(MyView::errorText)
+
     override val root = vbox {
         label("hud mixer tool")
         hbox {
@@ -43,6 +35,7 @@ class MyView: View() {
                 hbox {
                     button("+") {
                         action {
+                            errorTextProperty().set("")
                             val file = chooseDirectory("Select HUD directory")
                             file?.let {
                                 val hud = Hud(it.absolutePath)
@@ -52,7 +45,8 @@ class MyView: View() {
                     }
                     button("-") {
                         action {
-                            huds.remove(selectedHud)
+                            errorTextProperty().set("")
+                            if(selectedHud != baseHud) huds.remove(selectedHud)
                         }
                     }
                 }
@@ -69,22 +63,53 @@ class MyView: View() {
                 label("into")
                 combobox<Hud> {
                     items = huds
+                    setOnAction {
+                        baseHud = selectedItem
+                    }
+
+                    disableProperty().bind(transferList.sizeProperty.gt(0))
                 }
             }
         }
         button("make transfer") {
             action {
-
+                errorTextProperty().set("")
+                try {
+                    if(selectedHud == baseHud) throw NonsensicalException("cannot transfer a component into its own hud")
+                    transferList.add(Transfer(selectedHud ?: throw NotAllSelectedException("component hud"),
+                            baseHud ?: throw NotAllSelectedException("base hud"),
+                            selectedElement?: throw NotAllSelectedException("element")))
+                } catch(exception: NotAllSelectedException) {
+                    errorText = "${exception.message} not selected"
+                } catch(exception: NonsensicalException) {
+                    errorText = exception.message
+                }
             }
         }
-        listview<Transfer>(mutableListOf<Transfer>(Transfer(huds[0], huds[0], "Ammo")).observable()) {
-            this.setMaxSize(Double.MAX_VALUE, 100.0)
-            this.isFocusTraversable = false
-        }
-        button("create")
-    }
 
+        listview<Transfer>(transferList) {
+            this.setMaxSize(Double.MAX_VALUE, 100.0)
+            setOnMouseClicked { selectedTransfer = selectedItem}
+        }
+
+        button("-") {
+            action {
+                errorTextProperty().set("")
+                selectedTransfer?.let { transferList.remove(it) }
+            }
+        }
+
+        button("create") {
+            action {
+                errorTextProperty().set("")
+            }
+        }
+        label(errorTextProperty())
+    }
 
     init {
     }
 }
+
+class NotAllSelectedException(message: String) : Exception(message)
+class NonsensicalException(message: String): Exception(message)
