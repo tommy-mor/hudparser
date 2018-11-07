@@ -17,13 +17,16 @@ import java.util.function.Predicate
 import java.util.function.UnaryOperator
 import java.util.stream.Stream
 
+data class Transfer(val from: Hud, val to: Hud, val element: String) {
+
+}
 
 class MyView: View() {
     private var huds = mutableListOf(
             Hud("/Users/tommy/Downloads/rayshud-master")
     ).observable()
-    private var hudstrings: ObservableList<String> = FXCollections.observableArrayList(huds.map { it.hudname })
     var selectedHud: Hud? = null
+    var selectedElement: String? = null
     private lateinit var baseHud: Hud
     override val root = vbox {
         label("hud mixer tool")
@@ -35,12 +38,7 @@ class MyView: View() {
                 tableview(huds) {
                     readonlyColumn("Name", Hud::hudname)
                     readonlyColumn("Parsed", Hud::parsed)
-                    onUserSelect {
-                        println(it)
-                        selectedHud = it
-                    }
                     setOnMouseClicked { selectedHud = selectedItem }
-
                 }
                 hbox {
                     button("+") {
@@ -63,17 +61,23 @@ class MyView: View() {
             vbox {
                 label("import")
                 listview(listOf("health bar", "damage numbers",
-                        "ammo").observable())
+                        "ammo").observable()) {
+                    setOnMouseClicked { selectedElement = selectedItem }
+                }
             }
             vbox {
                 label("into")
-                combobox<String> {
-                    items = hudstrings
+                combobox<Hud> {
+                    items = huds
                 }
             }
         }
-        button("make transfer")
-        listview(listOf("import HEALTH from RAYSHUD into BASEHUD").observable()) {
+        button("make transfer") {
+            action {
+
+            }
+        }
+        listview<Transfer>(mutableListOf<Transfer>(Transfer(huds[0], huds[0], "Ammo")).observable()) {
             this.setMaxSize(Double.MAX_VALUE, 100.0)
             this.isFocusTraversable = false
         }
@@ -82,15 +86,5 @@ class MyView: View() {
 
 
     init {
-        huds.addListener(ListChangeListener { c ->
-            while(c.next()) {
-                if(c.wasAdded()) {
-                    val list = c.addedSubList.asSequence().toList()
-                    hudstrings.add(list[0].hudname)
-                } else if (c.wasRemoved()) {
-                    hudstrings.remove(c.removed.asSequence().toList()[0].hudname)
-                }
-            }
-        })
     }
 }
