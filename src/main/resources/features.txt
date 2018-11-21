@@ -1,10 +1,19 @@
 Health
-resource/ui/HudPlayerHealth.res
+File: resource/ui/HudPlayerHealth.res
+Hudlayout: None
 
 Ammo
-resource/ui/HudAmmoWeapons.res
-hudlayout: HudWeaponAmmo
+File: resource/ui/HudAmmoWeapons.res
+Hudlayout: HudWeaponAmmo
 
 Inspect Panel
-resource/ui/HudInspectPanel.res
-HudInspectPanel
+File: resource/ui/HudInspectPanel.res
+Hudlayout: HudInspectPanel
+
+Scoreboard
+File: resource/ui/Scoreboard.res
+Hudlayout: ScorePanel
+
+Meters
+File: HudItemEffectMeter_Cleaver.res, HudItemEffectMeter_Demoman.res, HudItemEffectMeter_engineer.res, HudItemEffectMeter_particlecannon.res, HudItemEffectMeter_pomson.res, HudItemEffectMeter_powerupbottle.res, HudItemEffectMeter_raygun.res, HudItemEffectMeter_scout.res, HudItemEffectMeter_sniper.res, HudItemEffectMeter_sniperfocus.res, HudItemEffectMeter_sodapopper.res, HudItemEffectMeter_spy.res, HudItemEffectMeter_spyknife.res
+Hudlayout: HudItemEffectMeter, HudDemomanCharge, HudBowCharge, HudFlameRocketCharge
