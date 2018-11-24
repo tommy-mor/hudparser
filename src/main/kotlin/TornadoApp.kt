@@ -17,7 +17,7 @@ data class Transfer(val from: Hud, val element: String) {
 }
 
 class MyView: View() {
-    private var huds: ObservableList<Hud> = (config.string("hudlist")).split(", ").map { Hud(it) }.observable()
+    private var huds: ObservableList<Hud> = (config.string("hudlist")).split(", ").distinct().map { Hud(it) }.observable()
 
     var selectedHud: Hud? = null
     var selectedElement: String? = null
@@ -65,7 +65,7 @@ class MyView: View() {
                                 log("adding hud at ${it.absolutePath}")
                                 val hud = Hud(it.absolutePath)
                                 huds.add(hud)
-                                config.set("hudlist" to huds.map { it.rootfile.absolutePath }.joinToString(", "))
+                                config.set("hudlist" to huds.map { it.rootfile.absolutePath }.distinct().joinToString(", "))
                                 config.save()
                             }
                         }
@@ -73,10 +73,20 @@ class MyView: View() {
                     button("-") {
                         action {
                             errorTextProperty().set("")
-                            if(selectedHud != baseHud) huds.remove(selectedHud)
+                            if (selectedHud != baseHud) huds.remove(selectedHud)
                             log("removing hud at ${selectedHud?.rootfile?.absolutePath}")
-                            config.set("hudlist" to huds.map { it.rootfile.absolutePath }.joinToString(", "))
+                            config.set("hudlist" to huds.map { it.rootfile.absolutePath }.distinct().joinToString(", "))
                             config.save()
+                        }
+                    }
+                    button("select as base") {
+                        action {
+                            baseHud?.isBase = ""
+                            errorTextProperty().set("")
+                            if (selectedHud == null) errorText = "no hud selected"
+                            baseHud = selectedHud
+                            selectedHud?.isBase = "yes"
+
                         }
                     }
                 }
@@ -94,13 +104,13 @@ class MyView: View() {
                         errorTextProperty().set("")
                         try {
                             val transfer = Transfer(selectedHud ?: throw NotAllSelectedException("component hud"),
-                                    selectedElement?: throw NotAllSelectedException("element"))
-                            if(selectedHud == baseHud) throw NonsensicalException("cannot transfer a component into its own hud")
-                            if(transferList.contains(transfer)) throw NonsensicalException("cannot transfer element twice")
+                                    selectedElement ?: throw NotAllSelectedException("element"))
+                            if (selectedHud == baseHud) throw NonsensicalException("cannot transfer a component into its own hud")
+                            if (transferList.contains(transfer)) throw NonsensicalException("cannot transfer element twice")
                             transferList.add(transfer)
-                        } catch(exception: NotAllSelectedException) {
+                        } catch (exception: NotAllSelectedException) {
                             errorText = "${exception.message} not selected"
-                        } catch(exception: NonsensicalException) {
+                        } catch (exception: NonsensicalException) {
                             errorText = exception.message
                         }
                     }
@@ -116,34 +126,35 @@ class MyView: View() {
                 label("Base Hud:")
                 label(baseHudProperty())
                 listview<Transfer>(transferList) {
-                    setOnMouseClicked { selectedTransfer = selectedItem}
+                    setOnMouseClicked { selectedTransfer = selectedItem }
                 }
             }
         }
 
+        vbox {
+            scrollpane {
+                //warning. this is jank. its the only way I could get the scroll bar to stay down
+                scrollpane = this
+                var vbox: VBox? = null
+                vbox {
+                    vbox = this
+                    label(logStringProperty())
+                }
+                vvalueProperty().bind(vbox!!.heightProperty())
 
-        scrollpane {
-            //warning. this is jank. its the only way I could get the scroll bar to stay down
-            scrollpane = this
-            var vbox: VBox? = null
-            vbox {
-                vbox = this
-                label(logStringProperty())
+                this.minViewportHeight = 130.0
+                this.maxHeight = 130.0
             }
-            vvalueProperty().bind(vbox!!.heightProperty())
-
-            this.minViewportHeight = 130.0
-            this.maxHeight = 130.0
-        }
 
 
-        button("create") {
-            action {
-                errorTextProperty().set("")
-                log("test create")
+            button("create") {
+                action {
+                    errorTextProperty().set("")
+                    log("test create")
+                }
             }
+            label(errorTextProperty())
         }
-        label(errorTextProperty())
     }
 
     init {
