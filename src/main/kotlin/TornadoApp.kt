@@ -1,14 +1,14 @@
 import javafx.application.Platform
 import javafx.collections.ObservableList
+import javafx.geometry.Pos
+import javafx.geometry.VPos
 import javafx.scene.control.ScrollPane
 import javafx.scene.layout.VBox
 import tornadofx.*
 import javax.json.JsonArray
 import javax.xml.bind.JAXBElement
 
-//todo change basehud selector box into list of elements box
-//todo change transfer lsit box into log
-
+//todo make it load in slower
 
 data class Transfer(val from: Hud, val element: String) {
     override fun toString(): String {
@@ -52,7 +52,6 @@ class MyView: View() {
                 tableview(huds) {
                     readonlyColumn("Name", Hud::hudname)
                     readonlyColumn("Parsed", Hud::parsed)
-                    readonlyColumn("Base", Hud::isBase)
 
                     setOnMouseClicked { selectedHud = selectedItem }
                 }
@@ -81,12 +80,9 @@ class MyView: View() {
                     }
                     button("select as base") {
                         action {
-                            baseHud?.isBase = ""
                             errorTextProperty().set("")
                             if (selectedHud == null) errorText = "no hud selected"
                             baseHud = selectedHud
-                            selectedHud?.isBase = "yes"
-
                         }
                     }
                 }
@@ -99,6 +95,7 @@ class MyView: View() {
                 }
             }
             vbox {
+                alignment = Pos.CENTER
                 button("====>") {
                     action {
                         errorTextProperty().set("")
