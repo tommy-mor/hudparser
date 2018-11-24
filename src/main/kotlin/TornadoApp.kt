@@ -1,24 +1,46 @@
+import javafx.application.Platform
 import javafx.collections.ObservableList
+import javafx.scene.control.ScrollPane
+import javafx.scene.layout.VBox
 import tornadofx.*
+import javax.json.JsonArray
+import javax.xml.bind.JAXBElement
 
-data class Transfer(val from: Hud, val to: Hud, val element: String) {
+//todo change basehud selector box into list of elements box
+//todo change transfer lsit box into log
+
+
+data class Transfer(val from: Hud, val element: String) {
     override fun toString(): String {
-        return "import ${element.toUpperCase()} from ${from.toString().toUpperCase()} into ${to.toString().toUpperCase()}"
+        return "${element} from ${from.toString()}"
     }
 }
 
 class MyView: View() {
-    private var huds = mutableListOf(
-            Hud("/Users/tommy/Downloads/rayshud-master")
-    ).observable()
+    private var huds: ObservableList<Hud> = (config.string("hudlist")).split(", ").map { Hud(it) }.observable()
+
     var selectedHud: Hud? = null
     var selectedElement: String? = null
-    var baseHud: Hud? = null
     var transferList: ObservableList<Transfer> = mutableListOf<Transfer>().observable()
     var selectedTransfer: Transfer? = null
+    var logText = mutableListOf<String>()
+    lateinit var scrollpane: ScrollPane
+
+    var baseHud: Hud? by property<Hud>()
+    fun baseHudProperty() = getProperty(MyView::baseHud)
+
+    var logString by property<String>("")
+    fun logStringProperty() = getProperty(MyView::logString)
 
     var errorText by property<String>()
     fun errorTextProperty() = getProperty(MyView::errorText)
+
+    val spec: Spec = parseSpec("/Users/tommy/programming/parser/src/main/resources/features.txt")
+
+    private fun log(msg: String) {
+        logStringProperty().set(logStringProperty().get() + msg)
+        logStringProperty().set(logStringProperty().get() + "\n")
+    }
 
     override val root = vbox {
         label("hud mixer tool")
@@ -30,6 +52,8 @@ class MyView: View() {
                 tableview(huds) {
                     readonlyColumn("Name", Hud::hudname)
                     readonlyColumn("Parsed", Hud::parsed)
+                    readonlyColumn("Base", Hud::isBase)
+
                     setOnMouseClicked { selectedHud = selectedItem }
                 }
                 hbox {
@@ -38,8 +62,11 @@ class MyView: View() {
                             errorTextProperty().set("")
                             val file = chooseDirectory("Select HUD directory")
                             file?.let {
+                                log("adding hud at ${it.absolutePath}")
                                 val hud = Hud(it.absolutePath)
                                 huds.add(hud)
+                                config.set("hudlist" to huds.map { it.rootfile.absolutePath }.joinToString(", "))
+                                config.save()
                             }
                         }
                     }
@@ -47,11 +74,13 @@ class MyView: View() {
                         action {
                             errorTextProperty().set("")
                             if(selectedHud != baseHud) huds.remove(selectedHud)
+                            log("removing hud at ${selectedHud?.rootfile?.absolutePath}")
+                            config.set("hudlist" to huds.map { it.rootfile.absolutePath }.joinToString(", "))
+                            config.save()
                         }
                     }
                 }
             }
-
             vbox {
                 label("import")
                 listview(listOf("health bar", "damage numbers",
@@ -60,54 +89,65 @@ class MyView: View() {
                 }
             }
             vbox {
-                label("into")
-                combobox<Hud> {
-                    items = huds
-                    setOnAction {
-                        baseHud = selectedItem
+                button("====>") {
+                    action {
+                        errorTextProperty().set("")
+                        try {
+                            val transfer = Transfer(selectedHud ?: throw NotAllSelectedException("component hud"),
+                                    selectedElement?: throw NotAllSelectedException("element"))
+                            if(selectedHud == baseHud) throw NonsensicalException("cannot transfer a component into its own hud")
+                            if(transferList.contains(transfer)) throw NonsensicalException("cannot transfer element twice")
+                            transferList.add(transfer)
+                        } catch(exception: NotAllSelectedException) {
+                            errorText = "${exception.message} not selected"
+                        } catch(exception: NonsensicalException) {
+                            errorText = exception.message
+                        }
                     }
-
-                    disableProperty().bind(transferList.sizeProperty.gt(0))
+                }
+                button("<====") {
+                    action {
+                        errorTextProperty().set("")
+                        selectedTransfer?.let { transferList.remove(it) }
+                    }
                 }
             }
-        }
-        button("make transfer") {
-            action {
-                errorTextProperty().set("")
-                try {
-                    if(selectedHud == baseHud) throw NonsensicalException("cannot transfer a component into its own hud")
-                    transferList.add(Transfer(selectedHud ?: throw NotAllSelectedException("component hud"),
-                            baseHud ?: throw NotAllSelectedException("base hud"),
-                            selectedElement?: throw NotAllSelectedException("element")))
-                } catch(exception: NotAllSelectedException) {
-                    errorText = "${exception.message} not selected"
-                } catch(exception: NonsensicalException) {
-                    errorText = exception.message
+            vbox {
+                label("Base Hud:")
+                label(baseHudProperty())
+                listview<Transfer>(transferList) {
+                    setOnMouseClicked { selectedTransfer = selectedItem}
                 }
             }
         }
 
-        listview<Transfer>(transferList) {
-            this.setMaxSize(Double.MAX_VALUE, 100.0)
-            setOnMouseClicked { selectedTransfer = selectedItem}
+
+        scrollpane {
+            //warning. this is jank. its the only way I could get the scroll bar to stay down
+            scrollpane = this
+            var vbox: VBox? = null
+            vbox {
+                vbox = this
+                label(logStringProperty())
+            }
+            vvalueProperty().bind(vbox!!.heightProperty())
+
+            this.minViewportHeight = 130.0
+            this.maxHeight = 130.0
         }
 
-        button("-") {
-            action {
-                errorTextProperty().set("")
-                selectedTransfer?.let { transferList.remove(it) }
-            }
-        }
 
         button("create") {
             action {
                 errorTextProperty().set("")
+                log("test create")
             }
         }
         label(errorTextProperty())
     }
 
     init {
+        log("loading previously selected huds: ${config.string("hudlist")}")
     }
 }
 

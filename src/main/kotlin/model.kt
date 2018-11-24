@@ -7,6 +7,7 @@ class Hud(filename: String) {
     val rootfile = File(filename)
     val root = folder(rootfile, mutableListOf())
     val hudname = rootfile.name
+    var isBase = ""
     lateinit var hudlayout: hudfile
     lateinit var clientscheme: hudfile
 
