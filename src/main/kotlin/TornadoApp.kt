@@ -8,7 +8,8 @@ import tornadofx.*
 import javax.json.JsonArray
 import javax.xml.bind.JAXBElement
 
-//todo make it load in slower
+//todo make it load in nicer
+//todo fix resizing behavior
 
 data class Transfer(val from: Hud, val element: String) {
     override fun toString(): String {
@@ -23,7 +24,6 @@ class MyView: View() {
     var selectedElement: String? = null
     var transferList: ObservableList<Transfer> = mutableListOf<Transfer>().observable()
     var selectedTransfer: Transfer? = null
-    var logText = mutableListOf<String>()
     lateinit var scrollpane: ScrollPane
 
     var baseHud: Hud? by property<Hud>()
@@ -81,8 +81,13 @@ class MyView: View() {
                     button("select as base") {
                         action {
                             errorTextProperty().set("")
-                            if (selectedHud == null) errorText = "no hud selected"
-                            baseHud = selectedHud
+                            if (selectedHud == null) {
+                                errorText = "no hud selected"
+                            } else if (transferList.any { it.from == selectedHud }) {
+                                errorText = "please remove transfers coming from ${selectedHud?.hudname}"
+                            } else {
+                                baseHud = selectedHud
+                            }
                         }
                     }
                 }
@@ -102,6 +107,7 @@ class MyView: View() {
                         try {
                             val transfer = Transfer(selectedHud ?: throw NotAllSelectedException("component hud"),
                                     selectedElement ?: throw NotAllSelectedException("element"))
+
                             if (selectedHud == baseHud) throw NonsensicalException("cannot transfer a component into its own hud")
                             if (transferList.contains(transfer)) throw NonsensicalException("cannot transfer element twice")
                             transferList.add(transfer)
