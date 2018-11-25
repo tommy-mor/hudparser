@@ -7,7 +7,6 @@ class Hud(filename: String) {
     val rootfile = File(filename)
     val root = folder(rootfile, mutableListOf())
     val hudname = rootfile.name
-    var isBase = ""
     lateinit var hudlayout: hudfile
     lateinit var clientscheme: hudfile
 
@@ -21,7 +20,6 @@ class Hud(filename: String) {
             clean(root)
             hudlayout = find(query = "hudlayout.res") ?: throw HudFileNotFoundException("hudlayout.res")
             clientscheme = find(query = "clientscheme.res") ?: throw HudFileNotFoundException("clientscheme.res")
-
             parsed = true
         } catch (e: Exception) {
             println(e)
@@ -39,6 +37,7 @@ class Hud(filename: String) {
         root.export(dir)
         println("exported new hud to ${pathname}")
     }
+
     private fun walk(file: folder) : hudfile {
         file.file.walkTopDown().maxDepth(1).drop(1).forEach {
             if(it.isDirectory) {
@@ -73,12 +72,14 @@ class Hud(filename: String) {
         return find(finalFname, useFullPath = true)
     }
 
+    //find hudfile with given filename (query) in given folder (domain)
     private fun find(query: String, domain: folder = root, useFullPath : Boolean = false): hudfile? {
         domain.children.forEach {
             if(it is folder) { find(query, it, useFullPath)?.let { return it }  }
             else {
                 var fname = if (useFullPath) it.file.absolutePath else it.file.name
-                if(fname.equals(query, ignoreCase = true)) {
+                println("fname $fname query $query")
+                if(fname.endsWith(query, ignoreCase = true)) {
                     return it
                 }
             }
@@ -96,6 +97,11 @@ class Hud(filename: String) {
     //list of files, list of res files
     //map of filename to chunk objects
     //methods to manipulate those things
+
+    fun getHudFile(filename: String): hudfile {
+        println("-$filename-")
+        return find(filename.trim(), useFullPath = true) ?: throw CreateHudException("could not find file $filename in hud $this")
+    }
 
     override fun toString(): String = hudname
 }
@@ -193,5 +199,6 @@ class folder(override val file : File, var children: MutableList<hudfile>) : hud
 }
 
 
-class HudFileNotFoundException(message:String): Exception(message)
-class CouldNotConvertHudFileException(message:String): Exception(message)
+class HudFileNotFoundException(message: String): Exception(message)
+class CouldNotConvertHudFileException(message: String): Exception(message)
+class CreateHudException(message: String): Exception(message)

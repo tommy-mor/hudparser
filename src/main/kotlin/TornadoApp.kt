@@ -7,6 +7,8 @@ import tornadofx.*
 //todo make it load in nicer
 //todo fix resizing behavior
 //todo fix hardcoded paths
+//todo comment functions properly
+
 
 data class Transfer(val from: Hud, val element: Task) {
     override fun toString(): String {
@@ -45,6 +47,23 @@ class MyView: View() {
     private fun loadSpec(): Spec {
         //errors in parseSpec will crash the program and rightly so
         return parseSpec("/Users/tommy/programming/parser/src/main/resources/features.txt")
+    }
+
+    private fun runTransfers() {
+        baseHud ?: throw NotAllSelectedException("base hud not selected")
+        //create new hud
+        var newhud = Hud(baseHud!!.rootfile.absolutePath) //todo add copy function to avoid reparsing
+        transferList.forEach { transfer ->
+            //import files
+            transfer.element.filenames.forEach { filename ->
+                transfer.from.getHudFile(filename).let { println(it) }
+//                newhud.importHudFile(transfer.from.getHudFile(filename))
+
+            }
+            //import hudlayout defs
+            //export hud
+            log("imported ${transfer.element.feature} from ${transfer.from.hudname}")
+        }
     }
 
     override val root = vbox {
@@ -157,7 +176,11 @@ class MyView: View() {
             button("create") {
                 action {
                     errorTextProperty().set("")
-                    log("test create")
+                    try {
+                        runTransfers()
+                    } catch (e: NonsensicalException) {
+                        errorText = e.message
+                    }
                 }
             }
             label(errorTextProperty())

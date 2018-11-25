@@ -14,8 +14,7 @@ fun makeTask(title: String, files: String, hudlayouts: String): Task {
         throw SpecParseException("First line of element $title's definition must start with \"File:\" instead of ${filenames.getOrNull(0)}")
     if(!(hudlayout?.get(0)?.startsWith("Hudlayout:", true) ?: false))
         throw SpecParseException("Second line of element $title's definition must start with \"Hudlayout:\" instaed of ${filenames.getOrNull(0)}")
-
-    return Task(title, hudlayout, filenames)
+    return Task(title, hudlayout, listOf(filenames[0].replace("File:", "")) + filenames.drop(1))
 }
 
 fun parseSpec(filename: String): Spec {
@@ -38,4 +37,4 @@ fun parseSpec(filename: String): Spec {
     }
 }
 
-class SpecParseException(msg: String) : Exception(msg)
+class SpecParseException(message: String) : Exception(message)
