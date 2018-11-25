@@ -1,17 +1,14 @@
-import javafx.application.Platform
 import javafx.collections.ObservableList
 import javafx.geometry.Pos
-import javafx.geometry.VPos
 import javafx.scene.control.ScrollPane
 import javafx.scene.layout.VBox
 import tornadofx.*
-import javax.json.JsonArray
-import javax.xml.bind.JAXBElement
 
 //todo make it load in nicer
 //todo fix resizing behavior
+//todo fix hardcoded paths
 
-data class Transfer(val from: Hud, val element: String) {
+data class Transfer(val from: Hud, val element: Task) {
     override fun toString(): String {
         return "${element} from ${from.toString()}"
     }
@@ -21,8 +18,12 @@ class MyView: View() {
     private var huds: ObservableList<Hud> = (config.string("hudlist")).split(", ").distinct().map { Hud(it) }.observable()
 
     var selectedHud: Hud? = null
-    var selectedElement: String? = null
+    var selectedElement: Task? = null
     var transferList: ObservableList<Transfer> = mutableListOf<Transfer>().observable()
+
+    var spec: Spec = loadSpec()
+    var specList: ObservableList<Task> = spec.observable()
+
     var selectedTransfer: Transfer? = null
     lateinit var scrollpane: ScrollPane
 
@@ -35,11 +36,15 @@ class MyView: View() {
     var errorText by property<String>()
     fun errorTextProperty() = getProperty(MyView::errorText)
 
-    val spec: Spec = parseSpec("/Users/tommy/programming/parser/src/main/resources/features.txt")
 
     private fun log(msg: String) {
         logStringProperty().set(logStringProperty().get() + msg)
         logStringProperty().set(logStringProperty().get() + "\n")
+    }
+
+    private fun loadSpec(): Spec {
+        //errors in parseSpec will crash the program and rightly so
+        return parseSpec("/Users/tommy/programming/parser/src/main/resources/features.txt")
     }
 
     override val root = vbox {
@@ -94,8 +99,7 @@ class MyView: View() {
             }
             vbox {
                 label("import")
-                listview(listOf("health bar", "damage numbers",
-                        "ammo").observable()) {
+                listview(specList) {
                     setOnMouseClicked { selectedElement = selectedItem }
                 }
             }

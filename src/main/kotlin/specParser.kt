@@ -1,7 +1,9 @@
 import java.io.File
 
 typealias Spec =  List<Task>
-data class Task(val feature: String, val hudlayout: List<String>?, val filenames: List<String>)
+data class Task(val feature: String, val hudlayout: List<String>?, val filenames: List<String>) {
+    override fun toString(): String = "$feature"
+}
 
 fun makeTask(title: String, files: String, hudlayouts: String): Task {
     if(files.equals("None", ignoreCase = true)) throw SpecParseException("file cannot be empty field")
