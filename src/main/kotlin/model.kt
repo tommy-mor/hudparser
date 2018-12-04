@@ -1,4 +1,3 @@
-import com.sun.javaws.exceptions.InvalidArgumentException
 import java.io.File
 //todo find a way around the #base stuff in rayshud and see how important it is to add that
 //todo maybe trickery like this will be hard to fix https://www.youtube.com/watch?v=B3Qf2CGsrUs
@@ -59,6 +58,7 @@ class Hud(filename: String) {
         domain.children.forEach { it.clean(this::findFileRelative) }
     }
 
+    //todo test this on windows (they use different things)
     private fun findFileRelative(basefname: String, relativefname: String): hudfile? {
         var chunks = basefname.trim('\"').split("/")
         var relChunks = relativefname.trim('\"').split("/")
@@ -73,14 +73,15 @@ class Hud(filename: String) {
     }
 
     //find hudfile with given filename (query) in given folder (domain)
-    private fun find(query: String, domain: folder = root, useFullPath : Boolean = false): hudfile? {
-        domain.children.forEach {
-            if(it is folder) { find(query, it, useFullPath)?.let { return it }  }
-            else {
-                var fname = if (useFullPath) it.file.absolutePath else it.file.name
-                println("fname $fname query $query")
+    private fun find(query: String, domain: folder = root, useFullPath : Boolean = false, replaceWith: hudfile? = null): hudfile? {
+        domain.children.forEachIndexed { index, child ->
+            if(child is folder) {
+                find(query, child, useFullPath)?.let { return it }
+            } else {
+                var fname = if (useFullPath) child.file.absolutePath else child.file.name
                 if(fname.endsWith(query, ignoreCase = true)) {
-                    return it
+                    replaceWith?.let { domain.children[index] = replaceWith }
+                    return child
                 }
             }
         }
@@ -97,6 +98,10 @@ class Hud(filename: String) {
     //list of files, list of res files
     //map of filename to chunk objects
     //methods to manipulate those things
+
+    fun importHudFile(relfilename: String, file: hudfile) {
+        find(relfilename.trim(), useFullPath = true, replaceWith = file)
+    }
 
     fun getHudFile(filename: String): hudfile {
         println("-$filename-")

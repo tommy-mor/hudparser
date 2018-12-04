@@ -13,8 +13,7 @@ fun main(args: Array<String>) {
     //var mainhud = Hud("/Users/tommy/Downloads/tf2basehud/")
     //mainhud.export("/Users/tommy/Downloads/outputhud/")
     //finds a chunk in hudlayout
-    parseSpec("/Users/tommy/programming/parser/src/main/resources/features.txt")
-
+    parseSpec("/home/tommy/programming/hudparser/src/main/resources/features.txt")
 }
 
 fun parseFile(file: File): List<Item> {

@@ -4,7 +4,6 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.Parser
-import com.sun.xml.internal.xsom.impl.UnionSimpleTypeImpl
 import java.io.PrintWriter
 
 

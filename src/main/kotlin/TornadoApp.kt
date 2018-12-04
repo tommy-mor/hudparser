@@ -1,6 +1,7 @@
 import javafx.collections.ObservableList
 import javafx.geometry.Pos
 import javafx.scene.control.ScrollPane
+import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import tornadofx.*
 
@@ -17,11 +18,15 @@ data class Transfer(val from: Hud, val element: Task) {
 }
 
 class MyView: View() {
+
     private var huds: ObservableList<Hud> = (config.string("hudlist")).split(", ").distinct().map { Hud(it) }.observable()
 
     var selectedHud: Hud? = null
     var selectedElement: Task? = null
     var transferList: ObservableList<Transfer> = mutableListOf<Transfer>().observable()
+
+    var logString by property<String>("")
+    fun logStringProperty() = getProperty(MyView::logString)
 
     var spec: Spec = loadSpec()
     var specList: ObservableList<Task> = spec.observable()
@@ -31,9 +36,6 @@ class MyView: View() {
 
     var baseHud: Hud? by property<Hud>()
     fun baseHudProperty() = getProperty(MyView::baseHud)
-
-    var logString by property<String>("")
-    fun logStringProperty() = getProperty(MyView::logString)
 
     var errorText by property<String>()
     fun errorTextProperty() = getProperty(MyView::errorText)
@@ -46,19 +48,20 @@ class MyView: View() {
 
     private fun loadSpec(): Spec {
         //errors in parseSpec will crash the program and rightly so
-        return parseSpec("/Users/tommy/programming/parser/src/main/resources/features.txt")
+        log("Parsed spec from TODO")
+        return parseSpec("/home/tommy/programming/hudparser/src/main/resources/features.txt")
     }
 
     private fun runTransfers() {
         baseHud ?: throw NotAllSelectedException("base hud not selected")
+        transferList.isEmpty().let { if(it) throw NotAllSelectedException("no transfers selected") }
         //create new hud
         var newhud = Hud(baseHud!!.rootfile.absolutePath) //todo add copy function to avoid reparsing
         transferList.forEach { transfer ->
             //import files
             transfer.element.filenames.forEach { filename ->
-                transfer.from.getHudFile(filename).let { println(it) }
-//                newhud.importHudFile(transfer.from.getHudFile(filename))
-
+                val fileToImport = transfer.from.getHudFile(filename)
+                newhud.importHudFile(filename, fileToImport)
             }
             //import hudlayout defs
             //export hud
@@ -159,6 +162,7 @@ class MyView: View() {
 
         vbox {
             scrollpane {
+                maxWidth = 820.0 //todo make this not magic number
                 //warning. this is jank. its the only way I could get the scroll bar to stay down
                 scrollpane = this
                 var vbox: VBox? = null
@@ -188,6 +192,7 @@ class MyView: View() {
     }
 
     init {
+        currentStage?.isResizable = false
         log("loading previously selected huds: ${config.string("hudlist")}")
     }
 }
