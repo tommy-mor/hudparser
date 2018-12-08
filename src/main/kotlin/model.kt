@@ -1,29 +1,31 @@
 import java.io.File
 //todo find a way around the #base stuff in rayshud and see how important it is to add that
 //todo maybe trickery like this will be hard to fix https://www.youtube.com/watch?v=B3Qf2CGsrUs
+//todo replace all printlns with logs
+//todo add protection against adding transfers that are not parsed
 
 class Hud(filename: String) {
     val rootfile = File(filename)
     val root = folder(rootfile, mutableListOf())
     val hudname = rootfile.name
-    lateinit var hudlayout: hudfile
-    lateinit var clientscheme: hudfile
+    lateinit var hudlayout: resfile
+    lateinit var clientscheme: resfile
 
     var parsed = false
-
 
     init {
         try {
             if (!rootfile.isDirectory) throw IllegalArgumentException("Hud needs to be given a directory")
             walk(root)
             clean(root)
-            hudlayout = find(query = "hudlayout.res") ?: throw HudFileNotFoundException("hudlayout.res")
-            clientscheme = find(query = "clientscheme.res") ?: throw HudFileNotFoundException("clientscheme.res")
+            hudlayout = find(query = "hudlayout.res") as? resfile ?: throw HudFileNotFoundException("hudlayout.res")
+            clientscheme = find(query = "clientscheme.res") as? resfile ?: throw HudFileNotFoundException("clientscheme.res")
             parsed = true
         } catch (e: Exception) {
             println(e)
             //todo make this report to ui what problem its having
             parsed = false
+            throw e
         }
     }
 
@@ -88,8 +90,31 @@ class Hud(filename: String) {
         return null
     }
 
-    fun getFont(query: String): Chunk {
-        throw NotImplementedError()
+    fun getFontDef(query: String): Chunk? {
+        var ret: Chunk? = null
+        clientscheme.items.forEach { item ->
+            if(item is Chunk) {
+                ret = findChunk(item, query)
+            }
+            ret?.let { return it }
+            //if clientschemes top level items are not chunks, don't search them
+        }
+        return ret
+    }
+
+    fun importFontDefs(logger: (String) -> Unit,fonts: Map<String, Chunk?>) {
+
+        //this.clientscheme.firstChunk is the "Scheme" chunk found in clientschemes
+        val fontsList = this.clientscheme.firstChunk!!.lookup("Fonts").let { it as? Chunk }?.also { it.children.addAll(fonts.values.filterNotNull()) } // add all fonts form args to own "Font" chunk
+        if (fontsList == null) { //if fonts are in another file using #base
+           this.clientscheme.firstChunk!!.children.add(Chunk("Fonts", fonts.values.filterNotNull().toMutableList(), Comment(toolTag), null))
+        }
+        fonts.forEach { (name, chunk) ->
+            if(chunk == null) {
+                logger("could not find font $name")
+            }
+        }
+
     }
 
     fun getLayout(query: String): Chunk {
@@ -129,10 +154,13 @@ fun mergeFile(base: resfile, new: resfile) {
     // walk the tree pair wise and if they both have a field, take new, if only base has it, keep it
 
     var baseChunk = base.items.filter { it is Chunk }.getOrNull(0)
-    if(baseChunk == null) base.items = base.items + new.items.filter { it is Chunk}[0] as Chunk
+    if(base.firstChunk == null) {
+        base.items = base.items + new.items.filter { it is Chunk}[0] as Chunk
+        base.firstChunk = new.firstChunk!!
+    }
 
     //todo make this safer
-    mergeChunk(base.items.filter{ it is Chunk}[0] as Chunk, new.items.filter { it is Chunk }[0] as Chunk)
+    mergeChunk(base.firstChunk!!, new.firstChunk!!)
 }
 
 interface hudfile {
@@ -143,8 +171,27 @@ interface hudfile {
 
 class resfile(override val file : File) : hudfile {
     var items = parseFile(file)
-    init {
 
+    //the first/main chunk in a file(usually the only one)
+    var firstChunk: Chunk? = items.filter { it is Chunk }.getOrNull(0) as? Chunk
+
+    fun getFonts(): List<String> {
+        var ret = mutableListOf<String>()
+        items.forEach { item ->
+            ret.addAll(recSearch(item, "font"))
+        }
+        return ret
+    }
+
+    private fun recSearch(base: Item, query: String): List<String> {
+        if(base is Chunk) {
+            return base.children.map { recSearch(it, query) }.reduceRight { l, r -> l + r }
+        } else if(base is Entry) {
+            if(base.title.trim('\"').equals(query, true)) {
+                return listOf<String>(base.value.trim('\"'))
+            }
+        }
+        return listOf<String>()
     }
 
     fun followBase(filefinder: (String, String) -> hudfile?, relname: String): Unit {

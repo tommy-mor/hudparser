@@ -13,12 +13,11 @@ interface Item {
     // take function that handles when one is found
     fun clean(baseFollower : (String) -> Unit)
     fun merge(new: Item)
-
 }
 
 //todo follow #base functions
 //todo merge function
-data class Chunk(override var title: String, var children: List<Item>, var comment: Comment?, var bracketcomment: Comment?) : Item {
+data class Chunk(override var title: String, var children: MutableList<Item>, var comment: Comment?, var bracketcomment: Comment?) : Item {
     override fun print(out: PrintWriter, indent: String) {
         out.println("$indent$title ${comment?.value ?: ""}")
         out.println("$indent{\n$indent${bracketcomment?.value ?: ""}")
@@ -36,7 +35,7 @@ data class Chunk(override var title: String, var children: List<Item>, var comme
         new.children.forEach {
             var ouritem = lookup(it.title)
             if(ouritem == null) {
-                children += it
+                children = (children + it).toMutableList() //gross workaround
             } else {
                 ouritem.merge(it)
             }
@@ -45,7 +44,7 @@ data class Chunk(override var title: String, var children: List<Item>, var comme
     }
 
     fun lookup(query: String): Item? {
-        return children.find { it.title.equals(query, ignoreCase = true) }
+        return children.find { it.title.trim('\"').equals(query, ignoreCase = true) }
     }
 }
 
@@ -112,7 +111,7 @@ object ItemsParser : Grammar<List<Item>>() {
     val commentparser = comment map { Comment(it.text) }
     val entryParser = word and word and optional(commentparser) map { (a,b ,c) -> Entry(a.text, b.text, c)}
     val chunkParser = word and optional(commentparser) and -LCURL and optional(commentparser) and zeroOrMore(parser { itemparser }) and -RCURL map
-            { (title, comment, lowercomment, items) -> Chunk(title.text, items, comment, lowercomment) }
+            { (title, comment, lowercomment, items) -> Chunk(title.text, items.toMutableList(), comment, lowercomment) }
     val itemparser : Parser<Item> = chunkParser or entryParser or commentparser
     override val rootParser = zeroOrMore(itemparser)
 }

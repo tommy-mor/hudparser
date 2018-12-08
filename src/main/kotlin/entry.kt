@@ -21,7 +21,6 @@ fun parseFile(file: File): List<Item> {
         val a = ItemsParser.tryParseToEnd(file.readText())
         if(a is ErrorResult) {
             println("-------------parse ERROR")
-
         }
         val b = a.toParsedOrThrow()
         return b.value
