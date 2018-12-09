@@ -44,7 +44,7 @@ data class Chunk(override var title: String, var children: MutableList<Item>, va
     }
 
     fun lookup(query: String): Item? {
-        return children.find { it.title.trim('\"').equals(query, ignoreCase = true) }
+        return children.find { it.title.trimQuotes().equals(query, ignoreCase = true) }
     }
 }
 

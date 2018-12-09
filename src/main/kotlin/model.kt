@@ -62,8 +62,8 @@ class Hud(filename: String) {
 
     //todo test this on windows (they use different things)
     private fun findFileRelative(basefname: String, relativefname: String): hudfile? {
-        var chunks = basefname.trim('\"').split("/")
-        var relChunks = relativefname.trim('\"').split("/")
+        var chunks = basefname.trimQuotes().split("/")
+        var relChunks = relativefname.trimQuotes().split("/")
         chunks = chunks.dropLast(1) // get rid of current file name
         while(relChunks[0] == "..") {
             relChunks = relChunks.drop(1)
@@ -91,15 +91,7 @@ class Hud(filename: String) {
     }
 
     fun getFontDef(query: String): Chunk? {
-        var ret: Chunk? = null
-        clientscheme.items.forEach { item ->
-            if(item is Chunk) {
-                ret = findChunk(item, query)
-            }
-            ret?.let { return it }
-            //if clientschemes top level items are not chunks, don't search them
-        }
-        return ret
+        clientscheme.findChunk(query)
     }
 
     fun importFontDefs(logger: (String) -> Unit,fonts: Map<String, Chunk?>) {
@@ -115,6 +107,12 @@ class Hud(filename: String) {
                 logger("Could not find font $name")
             }
         }
+    }
+
+    fun getFontFileDef(query: String): Chunk? {
+        var test = clientscheme.findChunk("CustomFontFiles")?.children?.map { it.title.trimQuotes().to(Int) }
+                println(test)
+        return null
     }
 
     fun getLayout(query: String): Chunk {
@@ -136,8 +134,8 @@ class Hud(filename: String) {
     override fun toString(): String = hudname
 }
 
-fun findChunk(target: Chunk, query: String) : Chunk? {
-    if(target.title.trim('\"').equals(query, ignoreCase = true)) {
+fun findChunk(target: Chunk, query: String): Chunk? {
+    if(target.title.trimQuotes().equals(query, ignoreCase = true)) {
         return target
     } else {
         target.children.forEach {
@@ -146,6 +144,7 @@ fun findChunk(target: Chunk, query: String) : Chunk? {
     }
     return null
 }
+
 fun mergeChunk(base: Chunk, new: Chunk): Unit {
     base.merge(new)
 }
@@ -174,6 +173,18 @@ class resfile(override val file : File) : hudfile {
 
     //the first/main chunk in a file(usually the only one)
     var firstChunk: Chunk? = items.filter { it is Chunk }.getOrNull(0) as? Chunk
+
+    fun findChunk(query: String): Chunk? {
+        var ret: Chunk? = null
+        items.forEach { item ->
+            if(item is Chunk) {
+                ret = findChunk(item, query)
+            }
+            ret?.let { return it }
+            //if clientschemes top level items are not chunks, don't search them
+        }
+        return ret
+    }
 
     fun getFonts(): List<String> {
         var ret = mutableListOf<String>()
@@ -245,11 +256,15 @@ fun recSearch(base: Item, query: String): List<String> {
     if(base is Chunk) {
         return base.children.map { recSearch(it, query) }.reduceRight { l, r -> l + r }
     } else if(base is Entry) {
-        if(base.title.trim('\"').equals(query, true)) {
-            return listOf<String>(base.value.trim('\"'))
+        if(base.title.trimQuotes().equals(query, true)) {
+            return listOf<String>(base.value.trimQuotes())
         }
     }
     return listOf<String>()
+}
+
+fun String.trimQuotes(): String {
+    return this.trim('\"')
 }
 
 class HudFileNotFoundException(message: String): Exception(message)
