@@ -125,10 +125,15 @@ class Hud(filename: String) {
     fun importFontFileDef(logger: (String) -> Unit, fontDefs: Map<String, Chunk?>) {
         val customFontDefs = clientscheme.findChunk("CustomFontFiles")
         var nextNumber = customFontDefs?.children?.map { it.title.trimQuotes().toInt() }?.max()?.plus(1) ?: throw CreateHudException("Could not read CustomFontFiles correctly")
+        val existingFonts = customFontDefs?.children?.map { ((it as? Chunk)?.lookup("name") as? Entry)?.value?.trimQuotes() }
         fontDefs.forEach { (name, chunk) ->
-            customFontDefs.children.add(Chunk("\"$nextNumber\"", chunk?.children ?: mutableListOf(), null, null))
-            nextNumber += 1
-            logger("Imported font file definition $name")
+            if(existingFonts.find { it.equals(name, true) } == null) { //check if hud already has a font with same name
+                customFontDefs.children.add(Chunk("\"$nextNumber\"", chunk?.children ?: mutableListOf(), null, null))
+                nextNumber += 1
+                logger("Imported font file definition $name")
+            } else {
+                logger("Base hud already had font file definition $name")
+            }
         }
     }
 
