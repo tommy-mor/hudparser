@@ -3,6 +3,8 @@ import java.io.File
 //todo maybe trickery like this will be hard to fix https://www.youtube.com/watch?v=B3Qf2CGsrUs
 //todo replace all printlns with logs
 //todo add protection against adding transfers that are not parsed
+//todo add tests
+//todo restructure code into more files
 
 class Hud(filename: String) {
     val rootfile = File(filename)
@@ -91,7 +93,7 @@ class Hud(filename: String) {
     }
 
     fun getFontDef(query: String): Chunk? {
-        clientscheme.findChunk(query)
+        return clientscheme.findChunk("Fonts")?.findChunk(query)
     }
 
     fun importFontDefs(logger: (String) -> Unit,fonts: Map<String, Chunk?>) {
@@ -110,9 +112,9 @@ class Hud(filename: String) {
     }
 
     fun getFontFileDef(query: String): Chunk? {
-        var test = clientscheme.findChunk("CustomFontFiles")?.children?.map { it.title.trimQuotes().to(Int) }
-                println(test)
-        return null
+        //only gets font's that are chunks, I'm pretty sure all custom fonts must be chunks (or else they can't have a name), but not sure
+        var map = clientscheme.findChunk("CustomFontFiles")?.children?.map { (it as? Chunk) }?.find { (it?.lookup("name") as? Entry)?.value?.trimQuotes().equals(query, true) }
+        return map //l not trigger??
     }
 
     fun getLayout(query: String): Chunk {
@@ -134,15 +136,19 @@ class Hud(filename: String) {
     override fun toString(): String = hudname
 }
 
-fun findChunk(target: Chunk, query: String): Chunk? {
+fun findChunkIn(target: Chunk, query: String): Chunk? {
     if(target.title.trimQuotes().equals(query, ignoreCase = true)) {
         return target
     } else {
         target.children.forEach {
-            if(it is Chunk) { findChunk(it, query)?.let { return it} }
+            if(it is Chunk) { findChunkIn(it, query)?.let { return it} }
         }
     }
     return null
+}
+
+fun Chunk.findChunk(query: String): Chunk? {
+    return findChunkIn(this, query)
 }
 
 fun mergeChunk(base: Chunk, new: Chunk): Unit {
@@ -178,7 +184,7 @@ class resfile(override val file : File) : hudfile {
         var ret: Chunk? = null
         items.forEach { item ->
             if(item is Chunk) {
-                ret = findChunk(item, query)
+                ret = findChunkIn(item, query)
             }
             ret?.let { return it }
             //if clientschemes top level items are not chunks, don't search them

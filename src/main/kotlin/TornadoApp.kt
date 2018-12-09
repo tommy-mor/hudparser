@@ -68,6 +68,7 @@ class MyView: View() {
                 val fontFileDefNames = fontDefs.values.filterNotNull().getFontFileDefNames()
                 val fontFileDefs = fontFileDefNames.associate { it to transfer.from.getFontFileDef(it) }
                 //get font filename defs, and import them
+                println(fontFileDefNames)
                 println(fontDefs)
                 println(fontFileDefs)
                 newhud.importFontDefs(::log, fontDefs)
