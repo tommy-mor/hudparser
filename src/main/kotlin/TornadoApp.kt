@@ -65,15 +65,29 @@ class MyView: View() {
                 val fileToImport = transfer.from.getHudFile(filename) as? resfile ?: throw CouldNotConvertHudFileException("should only try to get fonts form resfile")
                 val fontNames = fileToImport.getFonts()
                 val fontDefs = fontNames.associate { it to transfer.from.getFontDef(it) }
+                val fontFileDefNames = fontDefs.values.filterNotNull().getFontFileDefNames()
+                val fontFileDefs = fontFileDefNames.associate { it to transfer.from.getFontFileDef(it) }
                 //get font filename defs, and import them
                 println(fontDefs)
+                println(fontFileDefs)
                 newhud.importFontDefs(::log, fontDefs)
                 newhud.importHudFile(filename, fileToImport)
             }
+
+            //todo ask for exported hut pathname
             //import hudlayout defs
             //export hud
-            log("imported ${transfer.element.feature} from ${transfer.from.hudname}")
+            log("Imported ${transfer.element.feature} from ${transfer.from.hudname}")
         }
+
+        val pathname = "/home/tommy/Documents/huds/output"
+        log("Exported hud to $pathname")
+        newhud.export(pathname)
+    }
+
+    private fun Collection<Chunk>.getFontFileDefNames(): List<String> {
+        //todo annotate fonts with_uuid
+        return this.map { recSearch(it, "name") }.reduceRight { l, r -> l + r}.distinct()
     }
 
     override val root = vbox {
@@ -95,7 +109,7 @@ class MyView: View() {
                             errorTextProperty().set("")
                             val file = chooseDirectory("Select HUD directory")
                             file?.let {
-                                log("adding hud at ${it.absolutePath}")
+                                log("Adding hud at ${it.absolutePath}")
                                 val hud = Hud(it.absolutePath)
                                 huds.add(hud)
                                 config.set("hudlist" to huds.map { it.rootfile.absolutePath }.distinct().joinToString(", "))
@@ -107,7 +121,7 @@ class MyView: View() {
                         action {
                             errorTextProperty().set("")
                             if (selectedHud != baseHud) huds.remove(selectedHud)
-                            log("removing hud at ${selectedHud?.rootfile?.absolutePath}")
+                            log("Removing hud at ${selectedHud?.rootfile?.absolutePath}")
                             config.set("hudlist" to huds.map { it.rootfile.absolutePath }.distinct().joinToString(", "))
                             config.save()
                         }
@@ -200,7 +214,7 @@ class MyView: View() {
 
     init {
         currentStage?.isResizable = false
-        log("loading previously selected huds: ${config.string("hudlist")}")
+        log("Loading previously selected huds: ${config.string("hudlist")}")
     }
 }
 

@@ -103,18 +103,18 @@ class Hud(filename: String) {
     }
 
     fun importFontDefs(logger: (String) -> Unit,fonts: Map<String, Chunk?>) {
-
         //this.clientscheme.firstChunk is the "Scheme" chunk found in clientschemes
-        val fontsList = this.clientscheme.firstChunk!!.lookup("Fonts").let { it as? Chunk }?.also { it.children.addAll(fonts.values.filterNotNull()) } // add all fonts form args to own "Font" chunk
+        var fontsList = this.clientscheme.firstChunk!!.lookup("Fonts").let { it as? Chunk }?.also { it.children.addAll(fonts.values.filterNotNull()) } // add all fonts form args to own "Font" chunk
         if (fontsList == null) { //if fonts are in another file using #base
-           this.clientscheme.firstChunk!!.children.add(Chunk("Fonts", fonts.values.filterNotNull().toMutableList(), Comment(toolTag), null))
+            var fChunk =  Chunk("Fonts", fonts.values.filterNotNull().toMutableList(), Comment(toolTag), null)
+            fontsList = fChunk
+            this.clientscheme.firstChunk!!.children.add(fChunk)
         }
         fonts.forEach { (name, chunk) ->
             if(chunk == null) {
-                logger("could not find font $name")
+                logger("Could not find font $name")
             }
         }
-
     }
 
     fun getLayout(query: String): Chunk {
@@ -183,16 +183,6 @@ class resfile(override val file : File) : hudfile {
         return ret
     }
 
-    private fun recSearch(base: Item, query: String): List<String> {
-        if(base is Chunk) {
-            return base.children.map { recSearch(it, query) }.reduceRight { l, r -> l + r }
-        } else if(base is Entry) {
-            if(base.title.trim('\"').equals(query, true)) {
-                return listOf<String>(base.value.trim('\"'))
-            }
-        }
-        return listOf<String>()
-    }
 
     fun followBase(filefinder: (String, String) -> hudfile?, relname: String): Unit {
         //todo clean this up
@@ -250,6 +240,17 @@ class folder(override val file : File, var children: MutableList<hudfile>) : hud
     }
 }
 
+
+fun recSearch(base: Item, query: String): List<String> {
+    if(base is Chunk) {
+        return base.children.map { recSearch(it, query) }.reduceRight { l, r -> l + r }
+    } else if(base is Entry) {
+        if(base.title.trim('\"').equals(query, true)) {
+            return listOf<String>(base.value.trim('\"'))
+        }
+    }
+    return listOf<String>()
+}
 
 class HudFileNotFoundException(message: String): Exception(message)
 class CouldNotConvertHudFileException(message: String): Exception(message)
