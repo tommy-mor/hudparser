@@ -5,6 +5,9 @@ import java.io.File
 //todo add protection against adding transfers that are not parsed
 //todo add tests
 //todo restructure code into more files
+//todo deal with colisions, add _tags
+
+typealias Logger = (String) -> Unit
 
 class Hud(filename: String) {
     val rootfile = File(filename)
@@ -30,7 +33,6 @@ class Hud(filename: String) {
             throw e
         }
     }
-
 
     fun export(pathname: String) {
         //todo change to proper filename
@@ -96,7 +98,7 @@ class Hud(filename: String) {
         return clientscheme.findChunk("Fonts")?.findChunk(query)
     }
 
-    fun importFontDefs(logger: (String) -> Unit,fonts: Map<String, Chunk?>) {
+    fun importFontDefs(logger: Logger,fonts: Map<String, Chunk?>) {
         //this.clientscheme.firstChunk is the "Scheme" chunk found in clientschemes
         var fontsList = this.clientscheme.firstChunk!!.lookup("Fonts").let { it as? Chunk }?.also { it.children.addAll(fonts.values.filterNotNull()) } // add all fonts form args to own "Font" chunk
         if (fontsList == null) { //if fonts are in another file using #base
@@ -107,14 +109,27 @@ class Hud(filename: String) {
         fonts.forEach { (name, chunk) ->
             if(chunk == null) {
                 logger("Could not find font $name")
+            } else {
+                logger("Imported font definition $name")
             }
         }
     }
 
-    fun getFontFileDef(query: String): Chunk? {
+    fun getFontFileDef(logger: Logger, query: String): Chunk? {
         //only gets font's that are chunks, I'm pretty sure all custom fonts must be chunks (or else they can't have a name), but not sure
-        var map = clientscheme.findChunk("CustomFontFiles")?.children?.map { (it as? Chunk) }?.find { (it?.lookup("name") as? Entry)?.value?.trimQuotes().equals(query, true) }
+        var map = clientscheme.findChunk("CustomFontFiles")?.children?.map { it as? Chunk }?.find { (it?.lookup("name") as? Entry)?.value?.trimQuotes().equals(query, true) }
+        if(map == null) logger("Could not find font definiton for: $query")
         return map //l not trigger??
+    }
+
+    fun importFontFileDef(logger: (String) -> Unit, fontDefs: Map<String, Chunk?>) {
+        val customFontDefs = clientscheme.findChunk("CustomFontFiles")
+        var nextNumber = customFontDefs?.children?.map { it.title.trimQuotes().toInt() }?.max()?.plus(1) ?: throw CreateHudException("Could not read CustomFontFiles correctly")
+        fontDefs.forEach { (name, chunk) ->
+            customFontDefs.children.add(Chunk("\"$nextNumber\"", chunk?.children ?: mutableListOf(), null, null))
+            nextNumber += 1
+            logger("Imported font file definition $name")
+        }
     }
 
     fun getLayout(query: String): Chunk {
@@ -126,6 +141,10 @@ class Hud(filename: String) {
 
     fun importHudFile(relfilename: String, file: hudfile) {
         find(relfilename.trim(), useFullPath = true, replaceWith = file)
+    }
+
+    fun importNewHudFile(relfilename: String) {
+        throw NotImplementedError()
     }
 
     fun getHudFile(filename: String): hudfile {
