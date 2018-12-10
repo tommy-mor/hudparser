@@ -67,15 +67,19 @@ class MyView: View() {
                 val fontDefs = fontNames.associate { it to transfer.from.getFontDef(it) }
                 val fontFileDefNames = fontDefs.values.filterNotNull().getFontFileDefNames()
                 val fontFileDefs = fontFileDefNames.associate { it to transfer.from.getFontFileDef(::log, it) }
+                val fontFilenamessToImport = fontFileDefs.values.map { (it?.lookup("font") as? Entry)?.value?.trimQuotes() }
+                val fontFilesToImport = transfer.from.getFontFiles(fontFilenamessToImport.filterNotNull())
                 println(fontFileDefNames)
                 println(fontDefs)
                 println(fontFileDefs)
+                println(fontFilesToImport)
                 //import font file defs into hud, dont do duplicates (there will be lots of those)
                 //move font files over
 
                 newhud.importFontDefs(::log, fontDefs)
                 newhud.importFontFileDef(::log, fontFileDefs)
-                newhud.importHudFile(filename, fileToImport)
+                newhud.importHudResFile(filename, fileToImport)
+                newhud.importFontFile(fontFilesToImport)
             }
 
             //todo ask for exported hut pathname

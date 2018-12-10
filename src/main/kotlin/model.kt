@@ -79,14 +79,13 @@ class Hud(filename: String) {
     }
 
     //find hudfile with given filename (query) in given folder (domain)
-    private fun find(query: String, domain: folder = root, useFullPath : Boolean = false, replaceWith: hudfile? = null): hudfile? {
+    private fun find(query: String, domain: folder = root, useFullPath : Boolean = false): hudfile? {
         domain.children.forEachIndexed { index, child ->
             if(child is folder) {
                 find(query, child, useFullPath)?.let { return it }
             } else {
                 var fname = if (useFullPath) child.file.absolutePath else child.file.name
                 if(fname.endsWith(query, ignoreCase = true)) {
-                    replaceWith?.let { domain.children[index] = replaceWith }
                     return child
                 }
             }
@@ -137,6 +136,14 @@ class Hud(filename: String) {
         }
     }
 
+    fun getFontFiles(relFilenames: List<String>): List<hudfile> {
+        return relFilenames.map { find(it, root, useFullPath = true) }.filterNotNull()
+    }
+
+    fun importFontFile(font: hudfile) {
+        throw NotImplementedError() // here
+    }
+
     fun getLayout(query: String): Chunk {
         throw NotImplementedError()
     }
@@ -144,8 +151,8 @@ class Hud(filename: String) {
     //map of filename to chunk objects
     //methods to manipulate those things
 
-    fun importHudFile(relfilename: String, file: hudfile) {
-        (find(relfilename.trim(), useFullPath = true, replaceWith = file) as resfile).items = (file as resfile).items
+    fun importHudResFile(relfilename: String, file: hudfile) {
+        (find(relfilename.trim(), useFullPath = true) as resfile).items = (file as resfile).items
     }
 
     fun importNewHudFile(relfilename: String) {
