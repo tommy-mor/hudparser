@@ -145,7 +145,7 @@ class Hud(filename: String) {
     //methods to manipulate those things
 
     fun importHudFile(relfilename: String, file: hudfile) {
-        find(relfilename.trim(), useFullPath = true, replaceWith = file)
+        (find(relfilename.trim(), useFullPath = true, replaceWith = file) as resfile).items = (file as resfile).items
     }
 
     fun importNewHudFile(relfilename: String) {
