@@ -55,15 +55,15 @@ class MyView: View() {
     }
 
     private fun addTag(to: Chunk, tag: String) {
-        to.title += "_$tag"
+        to.title = "\"${to.title.trimQuotes()}_$tag\""
     }
 
     private fun resfile.addTagToFile(tag: String) {
         this.items.forEach { item ->
             if(item is Chunk) {
                 item.applyToAllEntriesRec {
-                    if(it.title.trimQuotes().equals("font")) {
-                        it.value += "_$tag"
+                    if(it.title.trimQuotes().contains("font")) {
+                        it.value = "\"${it.value.trimQuotes()}_$tag\""
                     }
                 }
             }
@@ -78,12 +78,12 @@ class MyView: View() {
         transferList.forEach { transfer ->
             //import files
             transfer.element.filenames.forEach { filename ->
-                val fileToImport = transfer.from.getHudFile(filename) as? resfile ?: throw CouldNotConvertHudFileException("should only try to get fonts form resfile")
+                val fileToImport = transfer.from.getHudFile(filename).deepCopy() as? resfile?: throw CouldNotConvertHudFileException("should only try to get fonts form resfile")
                 val fontNames = fileToImport.getFonts()
                 val fontDefs = fontNames.associate { it to transfer.from.getFontDef(it) }
                 val fontFileDefNames = fontDefs.values.filterNotNull().getFontFileDefNames()
                 val fontFileDefs = fontFileDefNames.associate { it to transfer.from.getFontFileDef(::log, it) }
-                val fontFilenamessToImport = fontFileDefs.values.map { (it?.lookup("font") as? Entry)?.value?.trimQuotes() }
+                val fontFilenamessToImport = fontFileDefs.values.map { (it?.lookup("font", broadSearch = true) as? Entry)?.value?.trimQuotes() }
                 val fontFilesToImport = transfer.from.getFontFiles(fontFilenamessToImport.filterNotNull())
                 println(fontFileDefNames)
                 println(fontDefs)

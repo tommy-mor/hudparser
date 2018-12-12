@@ -240,6 +240,7 @@ interface hudfile {
     val file: File
     fun clean(relFinder: (String, String) -> hudfile?): Unit
     fun export(folder: File): Unit
+    fun deepCopy(): hudfile
 }
 
 class resfile(override val file : File) : hudfile {
@@ -263,7 +264,7 @@ class resfile(override val file : File) : hudfile {
     fun getFonts(): List<String> {
         var ret = mutableListOf<String>()
         items.forEach { item ->
-            ret.addAll(recSearch(item, "font"))
+            ret.addAll(recSearch(item, "font", broadSearch = true))
         }
         return ret
     }
@@ -300,6 +301,13 @@ class resfile(override val file : File) : hudfile {
             }
         }
     }
+
+    override fun deepCopy(): resfile {
+        var new = resfile(File(file.absolutePath))
+        new.items = items.map { it.deepCopy() }
+        new.firstChunk = firstChunk?.deepCopy() //because the constructor does not really construct it all the way, clean does
+        return new
+    }
 }
 
 class otherfile(override val file : File) : hudfile {
@@ -310,6 +318,10 @@ class otherfile(override val file : File) : hudfile {
     override fun export(folder: File) {
         var newfile = File(folder.absolutePath + "/" + file.name)
         if (!newfile.exists()) file.copyTo(newfile)
+    }
+
+    override fun deepCopy(): otherfile {
+        return otherfile(File(file.absolutePath))
     }
 }
 
@@ -330,14 +342,21 @@ class folder(override val file : File, var children: MutableList<hudfile>) : hud
         //however, before export, absolutepath of new file is wrong which is gross
         this.children.add(newfile)
     }
+
+    override fun deepCopy(): folder {
+        return folder(File(file.absolutePath), children.map { it.deepCopy() }.toMutableList())
+    }
 }
 
 
-fun recSearch(base: Item, query: String): List<String> {
+fun recSearch(base: Item, query: String, broadSearch: Boolean = false): List<String> {
     if(base is Chunk) {
-        return base.children.map { recSearch(it, query) }.reduceRight { l, r -> l + r }
+        return base.children.map { recSearch(it, query, broadSearch) }.reduceRight { l, r -> l + r }
     } else if(base is Entry) {
-        if(base.title.trimQuotes().equals(query, true)) {
+        var match = if(broadSearch)
+            base.title.trimQuotes().contains(query, true)
+        else base.title.trimQuotes().equals(query, true)
+        if(match) {
             return listOf<String>(base.value.trimQuotes())
         }
     }

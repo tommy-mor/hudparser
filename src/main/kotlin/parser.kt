@@ -13,6 +13,8 @@ interface Item {
     // take function that handles when one is found
     fun clean(baseFollower : (String) -> Unit)
     fun merge(new: Item)
+    fun applyToAllEntriesRec(func: (Entry) -> Unit)
+    fun deepCopy(): Item
 }
 
 //todo follow #base functions
@@ -43,17 +45,20 @@ data class Chunk(override var title: String, var children: MutableList<Item>, va
 
     }
 
-    fun lookup(query: String): Item? {
+    fun lookup(query: String, broadSearch: Boolean = false): Item? {
+        //contains because it should find font and font_minmode, etc
+        if (broadSearch) return children.find { it.title.trimQuotes().contains(query, ignoreCase = true)}
         return children.find { it.title.trimQuotes().equals(query, ignoreCase = true) }
     }
 
-    fun applyToAllEntriesRec(func: (Entry) -> Unit) {
+    override fun applyToAllEntriesRec(func: (Entry) -> Unit) {
         children.forEach {
-            when(it) {
-                is Chunk -> applyToAllEntriesRec(func)
-                is Entry -> func(it)
-            }
+            it.applyToAllEntriesRec(func)
         }
+    }
+
+    override fun deepCopy(): Chunk {
+       return Chunk("$title", children.map { it.deepCopy() }.toMutableList(), comment?.deepCopy(), bracketcomment?.deepCopy())
     }
 }
 
@@ -76,6 +81,14 @@ data class Entry(override var title: String, var value: String, var comment: Com
         value = new.value
         comment = new.comment
     }
+
+    override fun applyToAllEntriesRec(func: (Entry) -> Unit) {
+        func(this)
+    }
+
+    override fun deepCopy(): Entry {
+        return Entry("$title", "$value", comment?.deepCopy())
+    }
 }
 
 data class Comment(var value: String) : Item {
@@ -90,6 +103,14 @@ data class Comment(var value: String) : Item {
 
     override fun merge(new: Item) {
         //do nothing
+    }
+
+    override fun applyToAllEntriesRec(func: (Entry) -> Unit) {
+        //do nothing
+    }
+
+    override fun deepCopy(): Comment {
+        return Comment("$value")
     }
 }
 
