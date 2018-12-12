@@ -46,6 +46,15 @@ data class Chunk(override var title: String, var children: MutableList<Item>, va
     fun lookup(query: String): Item? {
         return children.find { it.title.trimQuotes().equals(query, ignoreCase = true) }
     }
+
+    fun applyToAllEntriesRec(func: (Entry) -> Unit) {
+        children.forEach {
+            when(it) {
+                is Chunk -> applyToAllEntriesRec(func)
+                is Entry -> func(it)
+            }
+        }
+    }
 }
 
 data class Entry(override var title: String, var value: String, var comment: Comment?) : Item {

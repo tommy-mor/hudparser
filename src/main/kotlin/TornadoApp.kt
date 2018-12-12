@@ -54,6 +54,22 @@ class MyView: View() {
         return parseSpec("/home/tommy/programming/hudparser/src/main/resources/features.txt")
     }
 
+    private fun addTag(to: Chunk, tag: String) {
+        to.title += "_$tag"
+    }
+
+    private fun resfile.addTagToFile(tag: String) {
+        this.items.forEach { item ->
+            if(item is Chunk) {
+                item.applyToAllEntriesRec {
+                    if(it.title.trimQuotes().equals("font")) {
+                        it.value += "_$tag"
+                    }
+                }
+            }
+        }
+    }
+
     private fun runTransfers() {
         baseHud ?: throw NotAllSelectedException("base hud not selected")
         transferList.isEmpty().let { if(it) throw NotAllSelectedException("no transfers selected") }
@@ -76,6 +92,10 @@ class MyView: View() {
                 //todo get hud colors as well
                 //import font file defs into hud, dont do duplicates (there will be lots of those)
                 //move font files over
+
+                //add tags to font names, to distinguish them
+                fontDefs.values.filterNotNull().forEach { addTag(it, transfer.from.hudname) }
+                fileToImport.addTagToFile(transfer.from.hudname)
 
                 newhud.importFontDefs(::log, fontDefs)
                 newhud.importFontFileDef(::log, fontFileDefs)
