@@ -1,11 +1,9 @@
 import java.io.File
-//todo find a way around the #base stuff in rayshud and see how important it is to add that
 //todo maybe trickery like this will be hard to fix https://www.youtube.com/watch?v=B3Qf2CGsrUs
 //todo replace all printlns with logs
 //todo add protection against adding transfers that are not parsed
 //todo add tests
 //todo restructure code into more files
-//todo deal with colisions, add _tags
 
 typealias Logger = (String) -> Unit
 
