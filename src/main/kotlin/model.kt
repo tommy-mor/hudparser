@@ -127,6 +127,8 @@ class Hud(filename: String) {
         val existingFonts = customFontDefs?.children?.map { ((it as? Chunk)?.lookup("name") as? Entry)?.value?.trimQuotes() }
         fontDefs.forEach { (name, chunk) ->
             if(existingFonts.find { it.equals(name, true) } == null) { //check if hud already has a font with same name
+                val fnameEntry = (chunk?.lookup("font") as? Entry)
+                fnameEntry?.value = "\"resource/fonts/" + fnameEntry?.value!!.split("/").last()
                 customFontDefs.children.add(Chunk("\"$nextNumber\"", chunk?.children ?: mutableListOf(), null, null))
                 nextNumber += 1
                 logger("Imported font file definition $name")
@@ -140,8 +142,24 @@ class Hud(filename: String) {
         return relFilenames.map { find(it, root, useFullPath = true) }.filterNotNull()
     }
 
-    fun importFontFile(font: hudfile) {
-        throw NotImplementedError() // here
+    fun importFontFile(fontFiles: List<hudfile>) {
+        //go to/create resoruce/fonts
+        var resource = this.root.findFolder("resource")
+        this.rootfile.parent
+        if(resource == null) {
+            resource = folder(File(this.rootfile.parent + "/resource/"), mutableListOf())
+            this.root.addChild(resource)
+        }
+        var fonts = resource!!.findFolder("fonts")
+        if (fonts == null) {
+            fonts = folder(File(resource.file.path + "/fonts"), mutableListOf())
+            resource.addChild(fonts)
+        }
+
+        fontFiles.forEach {
+            fonts.addChild(it)
+        }
+        //then change font references in customfonts to be "resource/fonts/$fontname"
     }
 
     fun getLayout(query: String): Chunk {
@@ -165,6 +183,25 @@ class Hud(filename: String) {
     }
 
     override fun toString(): String = hudname
+}
+
+//todo fix this function, idk how it managed to be so bad
+fun hudfile.findFolder(query: String): folder? {
+    return when (this) {
+        is folder -> {
+            if(this.file.absolutePath.endsWith(query, true)) {
+                return this
+            } else {
+                var ret: folder? = null
+                children.forEach {
+                    ret = it.findFolder(query)
+                    ret?.let { return ret }
+                }
+                return ret
+            }
+        }
+        else -> return null
+    }
 }
 
 fun findChunkIn(target: Chunk, query: String): Chunk? {
@@ -272,11 +309,12 @@ class otherfile(override val file : File) : hudfile {
 
     override fun export(folder: File) {
         var newfile = File(folder.absolutePath + "/" + file.name)
-        file.copyTo(newfile)
+        if (!newfile.exists()) file.copyTo(newfile)
     }
 }
 
 class folder(override val file : File, var children: MutableList<hudfile>) : hudfile {
+
     override fun export(folder: File) {
         var newfile = File(folder.absolutePath + "/" + file.name + "/")
         newfile.mkdir()
@@ -285,6 +323,12 @@ class folder(override val file : File, var children: MutableList<hudfile>) : hud
 
     override fun clean(relFinder: (String, String) -> hudfile?) {
         children.forEach { it.clean(relFinder) }
+    }
+
+    fun addChild(newfile: hudfile) {
+        //don't need to change absoluetpath, because it is never used
+        //however, before export, absolutepath of new file is wrong which is gross
+        this.children.add(newfile)
     }
 }
 

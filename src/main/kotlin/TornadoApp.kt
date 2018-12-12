@@ -73,6 +73,7 @@ class MyView: View() {
                 println(fontDefs)
                 println(fontFileDefs)
                 println(fontFilesToImport)
+                //todo get hud colors as well
                 //import font file defs into hud, dont do duplicates (there will be lots of those)
                 //move font files over
 
