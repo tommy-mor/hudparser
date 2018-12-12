@@ -80,7 +80,7 @@ class MyView: View() {
             transfer.element.filenames.forEach { filename ->
                 val fileToImport = transfer.from.getHudFile(filename).deepCopy() as? resfile?: throw CouldNotConvertHudFileException("should only try to get fonts form resfile")
                 val fontNames = fileToImport.getFonts()
-                val fontDefs = fontNames.associate { it to transfer.from.getFontDef(it) }
+                val fontDefs = fontNames.associate { it to transfer.from.getFontDef(it)?.deepCopy() }
                 val fontFileDefNames = fontDefs.values.filterNotNull().getFontFileDefNames()
                 val fontFileDefs = fontFileDefNames.associate { it to transfer.from.getFontFileDef(::log, it) }
                 val fontFilenamessToImport = fontFileDefs.values.map { (it?.lookup("font", broadSearch = true) as? Entry)?.value?.trimQuotes() }
