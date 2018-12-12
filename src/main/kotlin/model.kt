@@ -97,6 +97,10 @@ class Hud(filename: String) {
         return clientscheme.findChunk("Fonts")?.findChunk(query)
     }
 
+    fun getColorDef(query: String): Item? {
+        return clientscheme.findChunk("Colors")?.lookup(query)
+    }
+
     fun importFontDefs(logger: Logger,fonts: Map<String, Chunk?>) {
         //this.clientscheme.firstChunk is the "Scheme" chunk found in clientschemes
         var fontsList = this.clientscheme.firstChunk!!.lookup("Fonts").let { it as? Chunk }?.also { it.children.addAll(fonts.values.filterNotNull()) } // add all fonts form args to own "Font" chunk
@@ -162,9 +166,10 @@ class Hud(filename: String) {
         //then change font references in customfonts to be "resource/fonts/$fontname"
     }
 
-    fun getLayout(query: String): Chunk {
-        throw NotImplementedError()
+    fun importColorDefs(colors: List<Entry>) {
+        clientscheme.findChunk("Colors")?.children?.addAll(colors)
     }
+
     //list of files, list of res files
     //map of filename to chunk objects
     //methods to manipulate those things
@@ -265,6 +270,14 @@ class resfile(override val file : File) : hudfile {
         var ret = mutableListOf<String>()
         items.forEach { item ->
             ret.addAll(recSearch(item, "font", broadSearch = true))
+        }
+        return ret
+    }
+
+    fun getColors(): List<String> {
+        var ret = mutableListOf<String>()
+        items.forEach { item ->
+            ret.addAll(recSearch(item, "color", broadSearch = true))
         }
         return ret
     }

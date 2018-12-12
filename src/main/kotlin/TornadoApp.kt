@@ -54,21 +54,22 @@ class MyView: View() {
         return parseSpec("/home/tommy/programming/hudparser/src/main/resources/features.txt")
     }
 
-    private fun addTag(to: Chunk, tag: String) {
+    private fun addTag(to: Item, tag: String) {
         to.title = "\"${to.title.trimQuotes()}_$tag\""
     }
 
-    private fun resfile.addTagToFile(tag: String) {
+    private fun resfile.addTagToFile(titleSelector: String, tag: String) {
         this.items.forEach { item ->
             if(item is Chunk) {
                 item.applyToAllEntriesRec {
-                    if(it.title.trimQuotes().contains("font")) {
+                    if(it.title.trimQuotes().contains(titleSelector)) {
                         it.value = "\"${it.value.trimQuotes()}_$tag\""
                     }
                 }
             }
         }
     }
+
 
     private fun runTransfers() {
         baseHud ?: throw NotAllSelectedException("base hud not selected")
@@ -85,6 +86,9 @@ class MyView: View() {
                 val fontFileDefs = fontFileDefNames.associate { it to transfer.from.getFontFileDef(::log, it) }
                 val fontFilenamessToImport = fontFileDefs.values.map { (it?.lookup("font", broadSearch = true) as? Entry)?.value?.trimQuotes() }
                 val fontFilesToImport = transfer.from.getFontFiles(fontFilenamessToImport.filterNotNull())
+                val colorsToImport = fileToImport.getColors().filterNot { it.trimQuotes().matches(""""\d* \d* \d* \d*""".toRegex()) }.distinct()
+                val colorDefs = colorsToImport.map { transfer.from.getColorDef(it)?.deepCopy() }.map { it as? Entry }.filterNotNull()
+
                 println(fontFileDefNames)
                 println(fontDefs)
                 println(fontFileDefs)
@@ -95,12 +99,16 @@ class MyView: View() {
 
                 //add tags to font names, to distinguish them
                 fontDefs.values.filterNotNull().forEach { addTag(it, transfer.from.hudname) }
-                fileToImport.addTagToFile(transfer.from.hudname)
+                fileToImport.addTagToFile("font", transfer.from.hudname)
+
+                colorDefs.filterNotNull().forEach { addTag(it, transfer.from.hudname) }
+                fileToImport.addTagToFile("color", transfer.from.hudname)
 
                 newhud.importFontDefs(::log, fontDefs)
                 newhud.importFontFileDef(::log, fontFileDefs)
                 newhud.importHudResFile(filename, fileToImport)
                 newhud.importFontFile(fontFilesToImport)
+                newhud.importColorDefs(colorDefs)
             }
 
             //todo ask for exported hut pathname
